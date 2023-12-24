@@ -61,7 +61,7 @@ always @(posedge clk or negedge rstn) begin
         img2col_t_cnt <= 0;
     end
     else begin
-        img2col_t_cnt <=(result_valid_pos)? (img2col_t_cnt == img2col_t_num)?1 :  img2col_t_cnt+1 : img2col_t_cnt;
+        img2col_t_cnt <=(result_valid_pos && result_valid[1])? (img2col_t_cnt == img2col_t_num)?1 :  img2col_t_cnt+1 : img2col_t_cnt;
     end
 end
 

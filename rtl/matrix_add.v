@@ -211,7 +211,7 @@ wire result_valid_neg ;
 wire result_valid_pos ;
 assign result_valid_neg = (matrix_add_nums==1)?(o_result_row_cnt==`S2P_SIZE-1 && o_result_col_cnt==`S2P_SIZE-1):
                                 ~result_valid_temp && result_valid_temp_d1;
-assign result_valid_pos = (matrix_add_nums==1)? (result_valid_temp && ~ result_valid_temp_d1) ||(o_result_row_cnt==`S2P_SIZE-1 && o_result_col_cnt==`S2P_SIZE-1):
+assign result_valid_pos = (matrix_add_nums==1)? (o_result_row_cnt==0 && o_result_col_cnt==0):
                               result_valid_temp && ~ result_valid_temp_d1;
 
 
@@ -254,24 +254,41 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
+
+
 reg ready_t_padding;
+reg ready_t_padding_special;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         ready_t_padding <= 0;
+        ready_t_padding_special <= 0;
+    end
+    else if(i2c_t_mat_last_nums==0)begin
+        ready_t_padding <= 0;
+        ready_t_padding_special <= 0;
     end
     else if(tensor_done)begin
+        ready_t_padding_special <= (matrix_add_nums==1)?1:0;
+        ready_t_padding <= (matrix_add_nums==1)?0:1;
+    end
+    else if(ready_t_padding_special && result_valid_neg )begin
         ready_t_padding <= 1;
+        ready_t_padding_special <= 0;
     end
     else if(result_valid_neg)begin
         ready_t_padding <= 0;
+        ready_t_padding_special <= 0;
     end
 end
+
+
+
 
 
 reg t_result_valid_padding;
 always @(*) begin
         if(ready_t_padding  &&  result_valid_temp)begin
-            t_result_valid_padding = (o_result_row_cnt <= `S2P_SIZE -2 && o_result_row_cnt >= i2c_t_mat_last_nums -1) ? 0 :result_valid_temp;
+            t_result_valid_padding = ( o_result_row_cnt >= i2c_t_mat_last_nums) ? 0: result_valid_temp;
         end
         else begin
             t_result_valid_padding = result_valid_temp;
@@ -311,14 +328,24 @@ end
 
 
 reg ready_done;
+reg ready_done_special;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         ready_done <= 0;
+        ready_done_special <= 0;
     end
     else if(weight_done)begin
+        ready_done_special <= (matrix_add_nums==1)?1:0;
+        ready_done <= (matrix_add_nums==1)?0:1;
+    end
+    else if(ready_done_special && result_valid_neg)begin
         ready_done <= 1;
+        ready_done_special <= 0;
     end
 end
+
+
+
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
