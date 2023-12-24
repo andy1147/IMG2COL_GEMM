@@ -38,8 +38,10 @@ module img2col (
         input [`DATA_WIDTH-1 :0] i_weight_data,
         output  [`ADDR_SIZE-1:0]  o_tensor_addr,
         output o_t_addr_valid,
+        output o_tensor_done,
         output  [`ADDR_SIZE-1:0]  o_weight_addr,
         output o_w_addr_valid,
+        output o_weight_done,
 
 
         output [`S2P_SIZE**2 * `DATA_WIDTH -1 : 0] o_matrix_tensor,
@@ -54,10 +56,14 @@ module img2col (
 
 
 wire tensor_done;
+wire weight_done;
 wire t_addr_valid;
 wire w_addr_valid;
 wire t_padding_valid;
 wire w_padding_valid;
+
+assign o_weight_done =weight_done;
+assign o_tensor_done = tensor_done;
 
 
 assign o_w_addr_valid = w_addr_valid;
@@ -109,6 +115,7 @@ weight_addr  u_weight_addr (
 
     .o_weight_addr           ( o_weight_addr  [`ADDR_SIZE-1:0]         ),
     .o_addr_valid            (w_addr_valid                         ),
+    .o_weight_done             (weight_done),
     .padding_valid           (w_padding_valid)
 );
 

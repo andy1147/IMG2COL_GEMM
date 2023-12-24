@@ -29,7 +29,8 @@ module weight_addr (
 
     output  [`ADDR_SIZE-1:0]  o_weight_addr,
     output reg o_addr_valid,
-    output reg padding_valid
+    output reg padding_valid,
+    output o_weight_done
 );
 
 
@@ -284,8 +285,9 @@ end
 //     end
 // end
 
+assign o_weight_done = tensor_done && buffer_row_cnt==buffer_row_nums-1;
+
 assign o_weight_addr = weight_addr;
-//assign padding_valid = end_padding_flag || padding_flag;
     
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin

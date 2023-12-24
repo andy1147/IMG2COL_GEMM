@@ -51,7 +51,8 @@ wire  [`RESULT_SIZE -1 :0] result;
 wire [2:0] result_valid;
 wire conv_done;
 
-
+wire tensor_done;
+wire weight_done;
 
 
 
@@ -164,8 +165,10 @@ img2col  u_img2col (
     //output
     .o_tensor_addr           ( tensor_addr    [`ADDR_SIZE-1:0]                    ),
     .o_t_addr_valid          ( o_t_addr_valid                                     ),
+    .o_tensor_done            (tensor_done),
     .o_weight_addr           ( weight_addr    [`ADDR_SIZE-1:0]                    ),
     .o_w_addr_valid          ( o_w_addr_valid                                     ),
+    .o_weight_done            (weight_done),
     .o_matrix_tensor         ( matrix_tensor  [`S2P_SIZE**2 * `DATA_WIDTH -1 : 0]   ),
     .o_matrix_weight         ( matrix_weight  [`S2P_SIZE**2 * `DATA_WIDTH -1 : 0]   ),
     .flag_buffer             ( flag_buffer                                        )
@@ -196,6 +199,8 @@ matrix_add  u_matrix_add (
     .enable                  (enable                                               ),
     .matrix_mul_done         ( matrix_mul_done                                     ),
     .matrix_product          ( matrix_product   [`S2P_SIZE * `RESULT_SIZE -1 : 0] ),
+    .tensor_done            (tensor_done),
+    .weight_done            (weight_done),
     // .tensor_size             ( tensor_size      [`TENSOR_SIZE-1:0]                ),
     // .kernel_size             ( kernel_size      [`KERNEL_SIZE-1:0]                ),
     // .channels                ( channels         [`CHANNELS_SIZE-1:0]              ),

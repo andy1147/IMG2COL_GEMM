@@ -36,11 +36,11 @@
 
 ///SIM
 
-`define SIM_DETAIL
-`define DETAIL_NUM 4
+//`define SIM_DETAIL
+`define DETAIL_NUM 0
 
 
-//`define SIM_ALL
+`define SIM_ALL
 
 
 
