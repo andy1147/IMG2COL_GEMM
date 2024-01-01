@@ -23,7 +23,7 @@ module para_prepare (
         output [`S2P_SIZE-1 : 0] o_t_addr_itlr,
         output [`TENSOR_SIZE + `STRIDE_SIZE -1 :0] o_t_addr_tms,
         output [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] o_t_addr_brn,
-        output [`TENSOR_SIZE-1:0] o_t_addr_ofs,
+        output reg [`TENSOR_SIZE-1:0] o_t_addr_ofs,
         output [`ADDR_SIZE-1:0] o_t_addr_sran,
         output [`ADDR_SIZE-1:0] o_t_addr_scan,
 
@@ -37,15 +37,15 @@ module para_prepare (
 
         //to matrix_add
         output [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] o_mat_add_man,
-        output [`TENSOR_SIZE*2 :0] o_mat_add_itn,
-        output [`KERNEL_NUMS_SIZE-1 :0] o_mat_add_iwn,
-        output [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] o_mat_add_rbn,
+        // output [`TENSOR_SIZE*2 :0] o_mat_add_itn,
+        // output [`KERNEL_NUMS_SIZE-1 :0] o_mat_add_iwn,
+        // output [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] o_mat_add_rbn,
         output [`S2P_SIZE -1 :0] o_mat_add_itmln,
-        output [`S2P_SIZE -1 :0] o_mat_add_iwmln,
+        //output [`S2P_SIZE -1 :0] o_mat_add_iwmln,
 
 
         //to result_process
-        output [`TENSOR_SIZE*2 :0] o_res_pro_itn,
+        //output [`TENSOR_SIZE*2 :0] o_res_pro_itn,
         //output [`ADDR_SIZE-1:0] o_res_pro_ofs,
         output [`ADDR_SIZE-1:0] o_res_pro_skga,
         output [`ADDR_SIZE-1:0] o_res_pro_ska
@@ -105,9 +105,9 @@ end
 
 
 reg t_addr_brn_done;
-reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] t_addr_brn;
-reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] w_addr_bcn;
-reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] mat_add_man;
+(* DONT_TOUCH="TRUE" *) reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] t_addr_brn;
+(* DONT_TOUCH="TRUE" *) reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] w_addr_bcn;
+(* DONT_TOUCH="TRUE" *) reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] mat_add_man;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         t_addr_brn <= 0;
@@ -116,9 +116,9 @@ always @(posedge clk or negedge rstn) begin
         t_addr_brn_done <= 0;
     end
     else if(K_K_C_done)begin
-        t_addr_brn <= (K_K_C % `S2P_SIZE ==0)?K_K_C >>> $clog2(`S2P_SIZE):(K_K_C >>> $clog2(`S2P_SIZE))+1;
-        w_addr_bcn <= t_addr_brn ;
-        mat_add_man <= t_addr_brn;
+        t_addr_brn <= (K_K_C % `S2P_SIZE ==0)?((K_K_C >>> $clog2(`S2P_SIZE))-1):(K_K_C >>> $clog2(`S2P_SIZE));
+        w_addr_bcn <= (K_K_C % `S2P_SIZE ==0)?((K_K_C >>> $clog2(`S2P_SIZE))-1):(K_K_C >>> $clog2(`S2P_SIZE)); 
+        mat_add_man <= (K_K_C % `S2P_SIZE ==0)?((K_K_C >>> $clog2(`S2P_SIZE))-1):(K_K_C >>> $clog2(`S2P_SIZE));
         t_addr_brn_done <=1;
     end
 end
@@ -143,11 +143,11 @@ always @(posedge clk or negedge rstn) begin
         temp<=temp+stride;
         count<=count+1;
         if(temp==tensor_size-kernel_size)begin
-            t_addr_ofs<=count;
+            t_addr_ofs<=count +1;
             t_addr_ofs_done<=1;
         end
         else if(temp>tensor_size-kernel_size)begin
-            t_addr_ofs<=count-1;
+            t_addr_ofs<=count;
             t_addr_ofs_done<=1;
         end
     end
@@ -158,7 +158,15 @@ always @(posedge clk or negedge rstn) begin
     end
 end
 
-assign o_t_addr_ofs = t_addr_ofs;
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
+        o_t_addr_ofs <= 0;
+    end
+    else if(t_addr_ofs_done)begin
+        o_t_addr_ofs <= t_addr_ofs -1 ;
+    end
+end
+//assign o_t_addr_ofs = t_addr_ofs -1;
 
 //***************_t_addr_sran
 reg [`ADDR_SIZE-1:0] t_addr_sran;
@@ -218,19 +226,19 @@ assign o_w_addr_bcn = w_addr_bcn;
 
 //*******************w_addr_brn
 reg [`KERNEL_NUMS_SIZE-1 : 0] w_addr_brn;
-reg [`KERNEL_NUMS_SIZE-1 : 0] mat_add_iwn;
+//reg [`KERNEL_NUMS_SIZE-1 : 0] mat_add_iwn;
 reg w_addr_brn_done;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         w_addr_brn <= 0;
         w_addr_brn_done <= 0;
-        mat_add_iwn <= 0;
+       // mat_add_iwn <= 0;
     end
     else if(start)begin
         w_addr_brn <= (kernel_nums % `S2P_SIZE ==0)? kernel_nums >>> $clog2(`S2P_SIZE):
                    (kernel_nums >>> $clog2(`S2P_SIZE)) +1;
-        mat_add_iwn <= (kernel_nums % `S2P_SIZE ==0)? kernel_nums >>> $clog2(`S2P_SIZE):
-                   (kernel_nums >>> $clog2(`S2P_SIZE)) +1;
+       // mat_add_iwn <= (kernel_nums % `S2P_SIZE ==0)? kernel_nums >>> $clog2(`S2P_SIZE):
+      //             (kernel_nums >>> $clog2(`S2P_SIZE)) +1;
         w_addr_brn_done <= 1;     
     end
 end
@@ -281,7 +289,7 @@ always @(posedge clk or negedge rstn) begin
         T_sub_K_div_S2_done <= 0;
     end
     else if(t_addr_ofs_done)begin
-        T_sub_K_div_S2 <= (t_addr_ofs+1) * (t_addr_ofs+1);
+        T_sub_K_div_S2 <= (t_addr_ofs) * (t_addr_ofs);
         T_sub_K_div_S2_done <= 1;
     end
 end
@@ -298,42 +306,42 @@ always @(posedge clk or negedge rstn) begin
     end
 end
 
-assign o_mat_add_itn = mat_add_itn;
+// assign o_mat_add_itn = mat_add_itn;
 
-assign o_mat_add_iwn = mat_add_iwn;
+//assign o_mat_add_iwn = mat_add_iwn;
 
-reg [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] mat_add_rbn;
-reg mat_add_rbn_done;
+// reg [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] mat_add_rbn;
+// reg mat_add_rbn_done;
 
-always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
-        mat_add_rbn <= 0;
-        mat_add_rbn_done <= 0;
-    end
-    else if(mat_add_itn_done && w_addr_brn_done)begin
-        mat_add_rbn <= mat_add_itn * o_mat_add_iwn;
-        mat_add_rbn_done <= 1;
-    end
-end
-assign o_mat_add_rbn = mat_add_rbn;
+// always @(posedge clk or negedge rstn) begin
+//     if(!rstn)begin
+//         mat_add_rbn <= 0;
+//         mat_add_rbn_done <= 0;
+//     end
+//     else if(mat_add_itn_done && w_addr_brn_done)begin
+//         mat_add_rbn <= mat_add_itn * o_mat_add_iwn;
+//         mat_add_rbn_done <= 1;
+//     end
+// end
+// assign o_mat_add_rbn = mat_add_rbn;
 
 
 reg [`S2P_SIZE -1 :0] mat_add_itmln;
 reg  mat_add_itmln_done;
-reg [`S2P_SIZE -1 :0] mat_add_iwmln;
-reg mat_add_iwmln_done;
+//reg [`S2P_SIZE -1 :0] mat_add_iwmln;
+//reg mat_add_iwmln_done;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         mat_add_itmln <= 0;
-        mat_add_iwmln <= 0;
+      //  mat_add_iwmln <= 0;
         mat_add_itmln_done <= 0;
-        mat_add_iwmln_done <= 0;
+      //  mat_add_iwmln_done <= 0;
     end
     else begin
-        if(w_addr_knr_done)begin
-            mat_add_iwmln <= w_addr_knr +1;
-            mat_add_iwmln_done <=1;
-        end
+        // if(w_addr_knr_done)begin
+        //     mat_add_iwmln <= w_addr_knr +1;
+        //     mat_add_iwmln_done <=1;
+        // end
         if(T_sub_K_div_S2_done)begin
             mat_add_itmln <= T_sub_K_div_S2 % `S2P_SIZE ;
             mat_add_itmln_done <= 1;
@@ -341,12 +349,12 @@ always @(posedge clk or negedge rstn) begin
     end
 end
 assign o_mat_add_itmln = mat_add_itmln;
-assign o_mat_add_iwmln = mat_add_iwmln ;
+//assign o_mat_add_iwmln = mat_add_iwmln ;
 
 
 
 //*****************************************************
-assign o_res_pro_itn = mat_add_itn;
+//assign o_res_pro_itn = mat_add_itn;
 //assign o_res_pro_ofs = T_sub_K_div_S2;
 
 reg [`ADDR_SIZE-1:0] res_pro_skga;

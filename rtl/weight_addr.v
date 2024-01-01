@@ -29,7 +29,8 @@ module weight_addr (
 
     output  [`ADDR_SIZE-1:0]  o_weight_addr,
     output reg o_addr_valid,
-    output reg padding_valid
+    output reg padding_valid,
+    output o_weight_done
 );
 
 
@@ -124,9 +125,9 @@ always @(posedge clk or negedge rstn) begin
                             (s2p_size_col_cnt_full)? s2p_size_row_cnt +1 : 
                             s2p_size_row_cnt;
             buffer_col_cnt <= (s2p_size_row_cnt_full && s2p_size_col_cnt_full)? 
-                            (buffer_col_cnt==buffer_col_nums-1)?0:buffer_col_cnt+1 :buffer_col_cnt;
-            buffer_row_cnt <= (tensor_done && buffer_col_cnt == buffer_col_nums-1 && buffer_row_cnt==buffer_row_nums-1 && s2p_size_row_cnt_full && s2p_size_col_cnt_full)? 0 :
-                                (tensor_done && buffer_col_cnt == buffer_col_nums-1 && s2p_size_row_cnt_full && s2p_size_col_cnt_full) ? 
+                            (buffer_col_cnt==buffer_col_nums)?0:buffer_col_cnt+1 :buffer_col_cnt;
+            buffer_row_cnt <= (tensor_done && buffer_col_cnt == buffer_col_nums && buffer_row_cnt==buffer_row_nums-1 && s2p_size_row_cnt_full && s2p_size_col_cnt_full)? 0 :
+                                (tensor_done && buffer_col_cnt == buffer_col_nums && s2p_size_row_cnt_full && s2p_size_col_cnt_full) ? 
                                 buffer_row_cnt +1 :
                                 buffer_row_cnt;
         // end 
@@ -169,7 +170,7 @@ always @(posedge clk or negedge rstn) begin
         base_point <= 0;
     end
     else if(enable)begin
-        if(buffer_col_cnt == buffer_col_nums-1 && next_state ==SWITCH_BUFFER)begin
+        if(buffer_col_cnt == buffer_col_nums && next_state ==SWITCH_BUFFER)begin
             if(tensor_done)begin
                 base_point <= base_point_right_up + img2col_w_width;
             end
@@ -197,7 +198,7 @@ wire end_padding_flag;
 
 assign end_padding_flag = (buffer_row_cnt== buffer_row_nums-1) ? (s2p_size_row_cnt > kernel_nums_rem ) : 0;
 
-assign padding_flag = (buffer_col_cnt == buffer_col_nums -1)? (s2p_size_col_cnt > img2col_w_width_rem) : 0; //when kkc%8==0, then -1 is very large(1111111) . so keep 0;
+assign padding_flag = (buffer_col_cnt == buffer_col_nums)? (s2p_size_col_cnt > img2col_w_width_rem) : 0; //when kkc%8==0, then -1 is very large(1111111) . so keep 0;
 
 
 
@@ -284,8 +285,9 @@ end
 //     end
 // end
 
+assign o_weight_done = tensor_done && buffer_row_cnt==buffer_row_nums-1;
+
 assign o_weight_addr = weight_addr;
-//assign padding_valid = end_padding_flag || padding_flag;
     
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin

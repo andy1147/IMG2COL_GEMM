@@ -6,11 +6,13 @@
 //add result_valid_temp_d1 siginal   2023.12.13
 
 // add result_valid_temp <= (o_result_row_cnt==`S2P_SIZE-2 && o_result_col_cnt==`S2P_SIZE-1)?0:result_valid_temp;\
-// fix when matrix_add_nums==1. result_valid_temp keep high,then buffer_result_cnt can not count;// add one special mode(matrix_add_nums==1)        2023.12.18
+// fix when matrix_add_nums==0. result_valid_temp keep high,then buffer_result_cnt can not count;// add one special mode(matrix_add_nums==0)        2023.12.18
 module matrix_add (
     input clk,
     input rstn,
     input enable,
+    input tensor_done,
+    input weight_done,
     input [1 :0] matrix_mul_done,
     input [`S2P_SIZE * `RESULT_SIZE -1 : 0] matrix_product,
 
@@ -25,20 +27,27 @@ module matrix_add (
 
 
     input [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] matrix_add_nums,
-    input [`TENSOR_SIZE*2 :0] img2col_t_num,
-    input [`KERNEL_NUMS_SIZE-1 :0] img2col_w_num,
-    input [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] result_buffer_nums,
+
+    //input [`TENSOR_SIZE*2 :0] img2col_t_num,
+
+    //input [`KERNEL_NUMS_SIZE-1 :0] img2col_w_num,
+    //input [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] result_buffer_nums,
+
+
     input [`S2P_SIZE -1 :0] i2c_t_mat_last_nums,
-    input [`S2P_SIZE -1 :0] i2c_w_mat_last_nums,
+    //input [`S2P_SIZE -1 :0] i2c_w_mat_last_nums,
 
 
     
 
-    output  reg [`RESULT_SIZE -1 :0] o_result,
-    output  [2:0] o_result_valid,   
-    output reg o_conv_done
+    output  reg [`RESULT_SIZE -1 :0] o_result_reg,
+    output  reg [3:0] o_result_valid_reg,   
+    output reg o_conv_done_reg
 
 );
+wire [3:0]  o_result_valid;
+wire [`RESULT_SIZE -1 :0] o_result;
+reg o_conv_done;
 
 
 // wire [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] matrix_add_nums ;
@@ -98,7 +107,7 @@ always @(posedge clk or negedge rstn) begin
         matrix_add_cnt <= 0;
     end
     else if( matrix_mul_done1_delay[0])begin
-        matrix_add_cnt <= (matrix_add_cnt==matrix_add_nums-1)?0:matrix_add_cnt+1;
+        matrix_add_cnt <= (matrix_add_cnt==matrix_add_nums)?0:matrix_add_cnt+1;
     end 
 end
 
@@ -120,7 +129,7 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         shift_all_reg <= 0;
     end
-    else if(matrix_add_cnt == matrix_add_nums-1 && matrix_mul_done[0])begin
+    else if(matrix_add_cnt == matrix_add_nums && matrix_mul_done[0])begin
         shift_all_reg <= 1;
     end
     else if(matrix_mul_done[0])begin
@@ -129,7 +138,6 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
-reg shift_done;
 wire shift_all;
 assign shift_all= shift_all_reg;
 
@@ -147,7 +155,6 @@ always @(posedge clk or negedge rstn) begin
         result[`RESULT_SIZE -1 :0] <= result[`S2P_SIZE **2 * `RESULT_SIZE -1  -: `RESULT_SIZE];
     end
     else if(matrix_mul_done[0]) begin
-        shift_done <= 0;
 
         for(i=0;i<=`S2P_SIZE-1;i=i+1)begin
             result[`S2P_SIZE **2 * `RESULT_SIZE -1 - i*`RESULT_SIZE -: `RESULT_SIZE] <= 
@@ -172,23 +179,21 @@ end
 
  assign result_valid_temp = shift_all_reg;
 
- always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
-        o_result <= 0;
-    end
-    else if(result_valid_temp)begin
-        o_result<= result[`S2P_SIZE**2* `RESULT_SIZE -1 -: `RESULT_SIZE];
-    end
- end
+//  always @(posedge clk or negedge rstn) begin
+//     if(!rstn)begin
+//         o_result <= 0;
+//     end
+//     else if(result_valid_temp)begin
+//         o_result<= result[`S2P_SIZE**2* `RESULT_SIZE -1 -: `RESULT_SIZE];
+//     end
+//  end
 
- //assign o_result = result[`S2P_SIZE**2* `RESULT_SIZE -1 -: `RESULT_SIZE];
+
+
+ assign o_result = result[`S2P_SIZE**2* `RESULT_SIZE -1 -: `RESULT_SIZE];
+
  reg result_valid_temp_d1 ;
  
-
-
-
-
-
 
 
 
@@ -207,9 +212,9 @@ end
 
 wire result_valid_neg ;
 wire result_valid_pos ;
-assign result_valid_neg = (matrix_add_nums==1)?(o_result_row_cnt==`S2P_SIZE-1 && o_result_col_cnt==`S2P_SIZE-1):
+assign result_valid_neg = (matrix_add_nums==0)?(o_result_row_cnt==`S2P_SIZE-1 && o_result_col_cnt==`S2P_SIZE-1):
                                 ~result_valid_temp && result_valid_temp_d1;
-assign result_valid_pos = (matrix_add_nums==1)? (result_valid_temp && ~ result_valid_temp_d1) ||(o_result_row_cnt==`S2P_SIZE-1 && o_result_col_cnt==`S2P_SIZE-1):
+assign result_valid_pos = (matrix_add_nums==0)? (o_result_row_cnt==0 && o_result_col_cnt==0):
                               result_valid_temp && ~ result_valid_temp_d1;
 
 
@@ -217,19 +222,20 @@ assign result_valid_pos = (matrix_add_nums==1)? (result_valid_temp && ~ result_v
 
 
 
-always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
-        result_buffer_cnt <= 0;
-        img2col_t_cnt <= 0;
-    end
-    else if(enable)begin
-        result_buffer_cnt <=(result_valid_neg)?(result_buffer_cnt==result_buffer_nums)?0: result_buffer_cnt+1:result_buffer_cnt;
-        img2col_t_cnt <=(result_valid_pos)? (img2col_t_cnt == img2col_t_num)?1 :  img2col_t_cnt+1 : img2col_t_cnt;
-    end
-end
+// always @(posedge clk or negedge rstn) begin
+//     if(!rstn)begin
+//         result_buffer_cnt <= 0;
+//         img2col_t_cnt <= 0;
+//     end
+//     else if(enable)begin
+//         result_buffer_cnt <=(result_valid_neg)?(result_buffer_cnt==result_buffer_nums)?0: result_buffer_cnt+1:result_buffer_cnt;
+//         img2col_t_cnt <=(result_valid_pos)? (img2col_t_cnt == img2col_t_num)?1 :  img2col_t_cnt+1 : img2col_t_cnt;
+//     end
+// end
 
 
-reg t_result_valid_padding;
+
+
 
 
 
@@ -238,7 +244,7 @@ always @(posedge clk or negedge rstn) begin
         o_result_row_cnt <= 0;
         o_result_col_cnt <= 0;
     end
-    else if(result_valid_temp_d1)begin
+    else if(result_valid_temp)begin
         o_result_row_cnt <= (o_result_row_cnt==`S2P_SIZE-1)?0:o_result_row_cnt+1;
         o_result_col_cnt <= (o_result_row_cnt==`S2P_SIZE-1 && o_result_col_cnt==`S2P_SIZE-1)?0:
                             (o_result_row_cnt==`S2P_SIZE-1) ? o_result_col_cnt +1 :
@@ -251,19 +257,48 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
+
+
+reg ready_t_padding;
+reg ready_t_padding_special;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
-        t_result_valid_padding <= 0;
+        ready_t_padding <= 0;
+        ready_t_padding_special <= 0;
     end
-    else begin
-        
-        if(img2col_t_cnt == img2col_t_num  && result_valid_temp_d1)begin
-            t_result_valid_padding <= (o_result_row_cnt <= `S2P_SIZE -2 && o_result_row_cnt >= i2c_t_mat_last_nums -1) ? 0 :result_valid_temp;
+    // else if(i2c_t_mat_last_nums==0)begin
+    //     ready_t_padding <= 0;
+    //     ready_t_padding_special <= 0;
+    // end
+    else if(tensor_done)begin
+        ready_t_padding_special <= (matrix_add_nums==0)?1:0;
+        ready_t_padding <= (matrix_add_nums==0)?0:1;
+    end
+    else if(ready_t_padding_special && result_valid_neg )begin
+        ready_t_padding <= 1;
+        ready_t_padding_special <= 0;
+    end
+    else if(result_valid_neg)begin
+        ready_t_padding <= 0;
+        ready_t_padding_special <= 0;
+    end
+end
+
+
+
+
+
+reg t_result_valid_padding;
+always @(*) begin
+        if(i2c_t_mat_last_nums==0)begin
+            t_result_valid_padding = result_valid_temp;
+        end
+        else if(ready_t_padding  &&  result_valid_temp)begin
+            t_result_valid_padding = ( o_result_row_cnt >= i2c_t_mat_last_nums) ? 0: result_valid_temp;//when need to padding, then t_result_valid_padding is low
         end
         else begin
-            t_result_valid_padding <= result_valid_temp;
+            t_result_valid_padding = result_valid_temp;
         end
-    end
 end
 
 
@@ -298,28 +333,63 @@ end
 
 
 
+reg ready_done;
+reg ready_done_special;
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
+        ready_done <= 0;
+        ready_done_special <= 0;
+    end
+    else if(weight_done)begin
+        ready_done_special <= (matrix_add_nums==0)?1:0;
+        ready_done <= (matrix_add_nums==0)?0:1;
+    end
+    else if(ready_done_special && result_valid_neg)begin
+        ready_done <= 1;
+        ready_done_special <= 0;
+    end
+end
+
+
+
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         o_conv_done <= 0;
     end
-    else if(result_buffer_cnt==result_buffer_nums)begin
+    else if(ready_done && result_valid_neg)begin
         o_conv_done <= 1;
     end
 end
 
-assign o_result_valid[0] = result_valid_temp_d1 && t_result_valid_padding;// && w_result_valid_padding;
-assign o_result_valid[1] = result_valid_temp_d1;
 
-reg result_valid_pos_d1;
+
+assign o_result_valid[0] = result_valid_temp && t_result_valid_padding;// && w_result_valid_padding;
+assign o_result_valid[1] = result_valid_temp;
+
+// reg result_valid_pos_d1;
+// always @(posedge clk or negedge rstn) begin
+//     if(!rstn)begin
+//         result_valid_pos_d1 <= 0;
+//     end
+//     else begin
+//         result_valid_pos_d1 <= result_valid_pos;
+//     end
+// end
+assign o_result_valid[2] = result_valid_pos;
+assign o_result_valid[3] = ready_t_padding;
+    
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
-        result_valid_pos_d1 <= 0;
+        o_result_reg <= 0;
+        o_result_valid_reg <= 0;
+        o_conv_done_reg <= 0;
     end
     else begin
-        result_valid_pos_d1 <= result_valid_pos;
+        o_result_reg <= o_result;
+        o_result_valid_reg <= o_result_valid;
+        o_conv_done_reg <= o_conv_done;
     end
 end
-assign o_result_valid[2] = result_valid_pos_d1;
-    
+
 endmodule

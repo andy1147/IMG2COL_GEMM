@@ -9,7 +9,7 @@ module matrix_mul
 (
     input clk,
     input rstn,
-    input flag_buffer,  //pluse
+    (* max_fanout = "50" *) input flag_buffer,  //pluse
     input [`S2P_SIZE**2 * `DATA_WIDTH -1 : 0] tensor_data,
     input [`S2P_SIZE**2 * `DATA_WIDTH -1 : 0] weight_data,
 
