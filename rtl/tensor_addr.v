@@ -110,7 +110,7 @@ reg [`ADDR_SIZE-1 : 0] tensor_addr;
 
 
 //for each buffer,count for their row and col
-(* max_fanout = "4" *)reg [`S2P_SIZE-1 : 0] s2p_size_row_cnt;
+(* max_fanout = "10" *) reg [`S2P_SIZE-1 : 0] s2p_size_row_cnt;
 reg [`S2P_SIZE-1 : 0] s2p_size_col_cnt; 
 
 
@@ -207,7 +207,7 @@ always @(posedge clk or negedge rstn) begin
                             (s2p_size_row_cnt == `S2P_SIZE-1)? s2p_size_col_cnt +1 : 
                             s2p_size_col_cnt;
             buffer_cnt <= (s2p_size_row_cnt == `S2P_SIZE-1 && s2p_size_col_cnt == `S2P_SIZE-1)? 
-                            (buffer_cnt==buffer_row_nums-1)?0:buffer_cnt+1 :buffer_cnt;
+                            (buffer_cnt==buffer_row_nums)?0:buffer_cnt+1 :buffer_cnt;
         // end 
     end
 end
@@ -227,15 +227,19 @@ always @(posedge clk or negedge rstn) begin
             if(next_state ==SWITCH_RF)begin
                 kernel_size_col_cnt <= kernel_size_col_cnt_save;
             end
-            else if(buffer_cnt==buffer_row_nums-1 && next_state==SWITCH_NEXT_BUFF)begin
+            else if(buffer_cnt==buffer_row_nums && next_state==SWITCH_NEXT_BUFF)begin
                 kernel_size_col_cnt <=0;
             end
-            else if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
-                kernel_size_col_cnt <=0;
+            else begin
+                kernel_size_col_cnt <= (kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)?0:
+                                        (kernel_size_row_cnt==kernel_size-1)?kernel_size_col_cnt +1 : kernel_size_col_cnt;
             end
-            else if(kernel_size_row_cnt==kernel_size-1)begin //other state
-                kernel_size_col_cnt <= kernel_size_col_cnt +1;
-            end
+            // else if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
+            //     kernel_size_col_cnt <=0;
+            // end
+            // else if(kernel_size_row_cnt==kernel_size-1)begin //other state
+            //     kernel_size_col_cnt <= kernel_size_col_cnt +1;
+            // end
 
 
 
@@ -245,19 +249,22 @@ always @(posedge clk or negedge rstn) begin
             if(next_state == SWITCH_RF)begin
                 kernel_size_row_cnt <= kernel_size_row_cnt_save;
             end
-            else if(buffer_cnt==buffer_row_nums-1 && next_state==SWITCH_NEXT_BUFF)begin
+            else if(buffer_cnt==buffer_row_nums && next_state==SWITCH_NEXT_BUFF)begin
                 kernel_size_row_cnt <= 0;
             end
-            else if(next_state == SELF_ADD)begin
+            else begin
                 kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt +1;
             end
-            else if(next_state == SWITCH_NEXT_BUFF)begin
-                kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt +1;
-            end
+            // else if(next_state == SELF_ADD)begin
+            //     kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt +1;
+            // end
+            // else if(next_state == SWITCH_NEXT_BUFF)begin
+            //     kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt +1;
+            // end
 
-            else begin // next_state == SWITCH_ROW and next_state == SWITCH_CHANNEL 
-                kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt;
-            end
+            // else begin // next_state == SWITCH_ROW and next_state == SWITCH_CHANNEL 
+            //     kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt;
+            // end
 
     end
 end
@@ -280,7 +287,7 @@ always @(posedge clk or negedge rstn) begin
             col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
                          (row_cnt==out_feature_size)?col_cnt+1 :col_cnt;
         end
-        else if(buffer_cnt== buffer_row_nums-1 && next_state ==SWITCH_NEXT_BUFF)begin //next buffer col
+        else if(buffer_cnt== buffer_row_nums && next_state ==SWITCH_NEXT_BUFF)begin //next buffer col
             row_cnt <= (row_cnt==out_feature_size)? 0: row_cnt+1 ;
             col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
                          (row_cnt==out_feature_size)?col_cnt+1 :col_cnt;
@@ -352,7 +359,7 @@ always @(posedge clk or negedge rstn) begin
             base_point_change_col <= base_point_change_col + t_mul_s;
         end
 
-        else if(buffer_cnt== buffer_row_nums-1 && next_state == SWITCH_NEXT_BUFF)begin
+        else if(buffer_cnt== buffer_row_nums && next_state == SWITCH_NEXT_BUFF)begin
             if(row_cnt == out_feature_size)begin
                 base_point_change_col <= base_point_change_col + t_mul_s;
             end
@@ -408,7 +415,7 @@ always @(posedge clk or negedge rstn) begin
         end
 
 
-        else if(buffer_cnt== buffer_row_nums-1 && next_state == SWITCH_NEXT_BUFF)begin
+        else if(buffer_cnt== buffer_row_nums && next_state == SWITCH_NEXT_BUFF)begin
             if(row_cnt == out_feature_size)begin
                 base_point <= base_point_change_col + t_mul_s ;
             end
@@ -489,7 +496,7 @@ assign padding_flag=(ready_padding_flag && ((out_feature_size)+1) % `S2P_SIZE ==
 
 
 
-assign end_padding_flag = (buffer_cnt==buffer_row_nums-1)? 
+assign end_padding_flag = (buffer_cnt==buffer_row_nums)? 
                             (s2p_size_row_cnt>img2col_t_length_rem) ? 1 : 0
                             : 0;
 
@@ -666,7 +673,7 @@ always @(posedge clk or negedge rstn) begin
          done <= 0;
     end
     else if(enable)begin
-        if(ready_padding_flag && buffer_cnt==buffer_row_nums-1 && s2p_size_col_cnt==`S2P_SIZE-1 && s2p_size_row_cnt==`S2P_SIZE-2)begin //base_point clear in time,can not change
+        if(ready_padding_flag && buffer_cnt==buffer_row_nums && s2p_size_col_cnt==`S2P_SIZE-1 && s2p_size_row_cnt==`S2P_SIZE-2)begin //base_point clear in time,can not change
             // done_temp <=1;
             done <=1;
         end

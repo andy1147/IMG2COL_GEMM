@@ -58,16 +58,30 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         t_buffer <= 0;
         w_buffer <= 0;
+        // tw_cnt <= 0;
+        // flag_buffer_reg <= 0;
+    end
+    else begin
+        // tw_cnt <= (tw_cnt==`S2P_SIZE**2-1)?0:tw_cnt+1;
+        // flag_buffer_reg <= (tw_cnt==`S2P_SIZE**2-1);
+        t_buffer[0 +: `DATA_WIDTH] <= t_data_fix;
+        t_buffer[`S2P_SIZE**2 * `DATA_WIDTH -1 : `DATA_WIDTH] <= t_buffer[`S2P_SIZE**2*`DATA_WIDTH -1-`DATA_WIDTH : 0];
+        w_buffer[0 +: `DATA_WIDTH] <= w_data_fix;
+        w_buffer[`S2P_SIZE**2 * `DATA_WIDTH -1 : `DATA_WIDTH] <= w_buffer[`S2P_SIZE**2* `DATA_WIDTH -1-`DATA_WIDTH : 0];
+    end
+end
+
+
+
+
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
         tw_cnt <= 0;
         flag_buffer_reg <= 0;
     end
     else if(start_sync)begin
         tw_cnt <= (tw_cnt==`S2P_SIZE**2-1)?0:tw_cnt+1;
         flag_buffer_reg <= (tw_cnt==`S2P_SIZE**2-1);
-        t_buffer[0 +: `DATA_WIDTH] <= t_data_fix;
-        t_buffer[`S2P_SIZE**2 * `DATA_WIDTH -1 : `DATA_WIDTH] <= t_buffer[`S2P_SIZE**2*`DATA_WIDTH -1-`DATA_WIDTH : 0];
-        w_buffer[0 +: `DATA_WIDTH] <= w_data_fix;
-        w_buffer[`S2P_SIZE**2 * `DATA_WIDTH -1 : `DATA_WIDTH] <= w_buffer[`S2P_SIZE**2* `DATA_WIDTH -1-`DATA_WIDTH : 0];
     end
 end
 

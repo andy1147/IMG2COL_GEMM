@@ -48,7 +48,7 @@ wire [1:0] matrix_mul_done;
 
 
 wire  [`RESULT_SIZE -1 :0] result;
-wire [2:0] result_valid;
+wire [3:0] result_valid;
 wire conv_done;
 
 wire tensor_done;
@@ -118,13 +118,13 @@ para_prepare  u_para_prepare (
     .o_w_addr_iwwr           ( img2col_w_width_rem    [`S2P_SIZE-1 : 0]                                ),
 
     .o_mat_add_man           ( matrix_add_nums    [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] ),
-    .o_mat_add_itn           ( img2col_t_num_ma   [`TENSOR_SIZE*2 :0]                              ),
-    .o_mat_add_iwn           ( img2col_w_num    [`KERNEL_NUMS_SIZE-1 :0]                         ),
-    .o_mat_add_rbn           ( result_buffer_nums    [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0]            ),
+    // .o_mat_add_itn           ( img2col_t_num_ma   [`TENSOR_SIZE*2 :0]                              ),
+    // .o_mat_add_iwn           ( img2col_w_num    [`KERNEL_NUMS_SIZE-1 :0]                         ),
+    // .o_mat_add_rbn           ( result_buffer_nums    [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0]            ),
     .o_mat_add_itmln         ( i2c_t_mat_last_nums  [`S2P_SIZE -1 :0]                                ),
-    .o_mat_add_iwmln         ( i2c_w_mat_last_nums  [`S2P_SIZE -1 :0]                                ),
+   // .o_mat_add_iwmln         ( i2c_w_mat_last_nums  [`S2P_SIZE -1 :0]                                ),
 
-    .o_res_pro_itn           ( img2col_t_num_rp    [`TENSOR_SIZE*2 :0]                              ),
+    //.o_res_pro_itn           ( img2col_t_num_rp    [`TENSOR_SIZE*2 :0]                              ),
    // .o_res_pro_ofs           ( o_feature_size    [`ADDR_SIZE-1:0]                                 ),
     .o_res_pro_skga          ( switch_kernel_group_addnums   [`ADDR_SIZE-1:0]                                 ),
     .o_res_pro_ska           ( switch_kernel_addnums    [`ADDR_SIZE-1:0]                                 )
@@ -176,7 +176,7 @@ img2col  u_img2col (
 
 
 
-
+(* keep_hierarchy="no" *)
 matrix_mul  u_matrix_mul (
 //input
     .clk                     ( clk                                                ),
@@ -208,15 +208,15 @@ matrix_add  u_matrix_add (
     // .kernel_nums             ( kernel_nums      [`KERNEL_NUMS_SIZE-1 :0]          ),
 
     .matrix_add_nums         ( matrix_add_nums      [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] ),
-    .img2col_t_num           ( img2col_t_num_ma      [`TENSOR_SIZE*2 :0]                              ),
-    .img2col_w_num           ( img2col_w_num        [`KERNEL_NUMS_SIZE-1 :0]                         ),
-    .result_buffer_nums      ( result_buffer_nums   [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0]            ),
+    //.img2col_t_num           ( img2col_t_num_ma      [`TENSOR_SIZE*2 :0]                              ),
+    //.img2col_w_num           ( img2col_w_num        [`KERNEL_NUMS_SIZE-1 :0]                         ),
+    //.result_buffer_nums      ( result_buffer_nums   [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0]            ),
     .i2c_t_mat_last_nums     ( i2c_t_mat_last_nums  [`S2P_SIZE -1 :0]                                ),
-    .i2c_w_mat_last_nums     ( i2c_w_mat_last_nums  [`S2P_SIZE -1 :0]                                ),
+    //.i2c_w_mat_last_nums     ( i2c_w_mat_last_nums  [`S2P_SIZE -1 :0]                                ),
     //output
-    .o_result                ( result         [`RESULT_SIZE -1 :0]               ),
-    .o_result_valid          ( result_valid                                      ),
-    .o_conv_done             ( conv_done                                           )        
+    .o_result_reg                ( result         [`RESULT_SIZE -1 :0]               ),
+    .o_result_valid_reg          ( result_valid                                      ),
+    .o_conv_done_reg             ( conv_done                                           )        
 );
 
 
@@ -233,7 +233,7 @@ result_process  u_result_process (
     // .kernel_size             ( kernel_size    [`KERNEL_SIZE-1:0]   ),
     // .stride                  ( stride         [`STRIDE_SIZE-1:0]   ),
 
-    .img2col_t_num                ( img2col_t_num_rp              [`TENSOR_SIZE*2 :0]  ),
+   // .img2col_t_num                ( img2col_t_num_rp              [`TENSOR_SIZE*2 :0]  ),
    // .o_feature_size               ( o_feature_size               [`ADDR_SIZE-1:0]     ),
     .switch_kernel_group_addnums  ( switch_kernel_group_addnums  [`ADDR_SIZE-1:0]     ),
     .switch_kernel_addnums        ( switch_kernel_addnums        [`ADDR_SIZE-1:0]     ),

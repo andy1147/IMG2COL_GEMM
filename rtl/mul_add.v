@@ -27,6 +27,8 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
+// (* max_fanout = "10" *) reg [`DATA_WIDTH-1:0] op1_abs;
+// (* max_fanout = "10" *) reg [`DATA_WIDTH-1:0] op2_abs;
 reg [`DATA_WIDTH-1:0] op1_abs;
 reg [`DATA_WIDTH-1:0] op2_abs;
 always @(posedge clk or negedge rstn) begin
@@ -65,7 +67,7 @@ end
 
 
 
-reg [`DATA_WIDTH+`DATA_WIDTH-1:0] product_pati_us;
+(*use_dsp = "yes"*) reg [`DATA_WIDTH+`DATA_WIDTH-1:0] product_pati_us;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin 
         product_pati_us <= 0;
