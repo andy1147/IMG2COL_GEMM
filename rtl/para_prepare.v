@@ -59,10 +59,10 @@ module para_prepare (
 
 
 
-reg [`TENSOR_SIZE + `STRIDE_SIZE -1 :0] t_addr_tms ;
+(*use_dsp = "yes"*)reg [`TENSOR_SIZE + `STRIDE_SIZE -1 :0] t_addr_tms ;
 reg t_addr_tms_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         t_addr_tms <= 0;
         t_addr_tms_done <= 0;
     end
@@ -79,7 +79,7 @@ assign o_t_addr_tms = t_addr_tms;
 reg K_K_done;
 reg [`KERNEL_SIZE + `KERNEL_SIZE -1 :0] K_K;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         K_K <= 0;
         K_K_done <= 0;
     end
@@ -90,10 +90,10 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
-reg [`KERNEL_SIZE + `KERNEL_SIZE +`CHANNELS_SIZE -1 :0] K_K_C;
+(*use_dsp = "yes"*)reg [`KERNEL_SIZE + `KERNEL_SIZE +`CHANNELS_SIZE -1 :0] K_K_C;
 reg K_K_C_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         K_K_C <= 0;
         K_K_C_done <= 0;
     end
@@ -109,7 +109,7 @@ reg t_addr_brn_done;
 (* DONT_TOUCH="TRUE" *) reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] w_addr_bcn;
 (* DONT_TOUCH="TRUE" *) reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] mat_add_man;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         t_addr_brn <= 0;
         w_addr_bcn <= 0;
         mat_add_man <= 0;
@@ -132,7 +132,7 @@ reg t_addr_ofs_done;
 reg [`TENSOR_SIZE-1:0] temp;
 reg [`TENSOR_SIZE-1:0] count;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         temp<=0;
         count<=0;
         t_addr_ofs_done<=0;
@@ -159,7 +159,7 @@ always @(posedge clk or negedge rstn) begin
 end
 
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         o_t_addr_ofs <= 0;
     end
     else if(t_addr_ofs_done)begin
@@ -173,7 +173,7 @@ reg [`ADDR_SIZE-1:0] t_addr_sran;
 reg t_addr_sran_done;
 
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         t_addr_sran <= 0;
         t_addr_sran_done <=0;
     end
@@ -185,7 +185,7 @@ end
 assign o_t_addr_sran = t_addr_sran;
 
 //**************************t_addr_scan
-reg [`ADDR_SIZE-1:0] t_addr_scan;
+(*use_dsp = "yes"*)reg [`ADDR_SIZE-1:0] t_addr_scan;
 reg t_addr_scan_done;
 reg [`TENSOR_SIZE-1 :0] T_sub_K;
 reg T_sub_K_done;
@@ -193,7 +193,7 @@ reg [`TENSOR_SIZE-1 :0] T_add_1;
 reg T_add_1_done;
 
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         T_sub_K <= 0;
         T_add_1 <= 0;
         T_add_1_done <= 0;
@@ -207,7 +207,7 @@ always @(posedge clk or negedge rstn) begin
     end
 end
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         t_addr_scan <= 0;
         t_addr_scan_done <= 0;
     end
@@ -229,7 +229,7 @@ reg [`KERNEL_NUMS_SIZE-1 : 0] w_addr_brn;
 //reg [`KERNEL_NUMS_SIZE-1 : 0] mat_add_iwn;
 reg w_addr_brn_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         w_addr_brn <= 0;
         w_addr_brn_done <= 0;
        // mat_add_iwn <= 0;
@@ -255,7 +255,7 @@ reg [`S2P_SIZE-1 : 0] w_addr_iwwr;
 reg [`S2P_SIZE-1 : 0] t_addr_itlr;
 
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         w_addr_knr <= 0;
         w_addr_iwwr <= 0;
         t_addr_itlr <= 0;
@@ -280,11 +280,11 @@ assign o_mat_add_man = mat_add_man;
 
 //**************************************mat_add_itn
 reg [`TENSOR_SIZE*2 :0] mat_add_itn;
-reg [`TENSOR_SIZE*2 :0] T_sub_K_div_S2;
+(*use_dsp = "yes"*)reg [`TENSOR_SIZE*2 :0] T_sub_K_div_S2;
 reg T_sub_K_div_S2_done;
 reg mat_add_itn_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         T_sub_K_div_S2 <= 0;
         T_sub_K_div_S2_done <= 0;
     end
@@ -295,7 +295,7 @@ always @(posedge clk or negedge rstn) begin
 end
 
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         mat_add_itn_done <= 0;
         mat_add_itn <= 0;
     end
@@ -314,7 +314,7 @@ end
 // reg mat_add_rbn_done;
 
 // always @(posedge clk or negedge rstn) begin
-//     if(!rstn)begin
+//     if(!rstn || !start)begin
 //         mat_add_rbn <= 0;
 //         mat_add_rbn_done <= 0;
 //     end
@@ -331,7 +331,7 @@ reg  mat_add_itmln_done;
 //reg [`S2P_SIZE -1 :0] mat_add_iwmln;
 //reg mat_add_iwmln_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         mat_add_itmln <= 0;
       //  mat_add_iwmln <= 0;
         mat_add_itmln_done <= 0;
@@ -360,7 +360,7 @@ assign o_mat_add_itmln = mat_add_itmln;
 reg [`ADDR_SIZE-1:0] res_pro_skga;
 reg res_pro_skga_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         res_pro_skga <= 0;
         res_pro_skga_done <= 0;
     end
@@ -375,7 +375,7 @@ assign o_res_pro_skga= res_pro_skga;
 reg [`ADDR_SIZE-1:0] res_pro_ska;
 reg res_pro_ska_done;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         res_pro_ska <= 0;
         res_pro_ska_done <= 0;
     end
@@ -389,7 +389,7 @@ assign o_res_pro_ska=res_pro_ska;
 
 reg reg_enable;
 always @(posedge clk or negedge rstn) begin
-    if(!rstn)begin
+    if(!rstn || !start)begin
         reg_enable <= 0;
     end
     else if(res_pro_skga_done)begin

@@ -1,6 +1,7 @@
 
-@REM del ./work/wave
-@REM del ./work/TOP.vcd 
+del ./work/wave
+del ./work/*.lxt
+del ./work/TOP.vcd 
 @REM $FILENAME=TOP
 @REM echo $FILENAME $FILENAME.vcd
 @REM echo $FILENAME"vcd"
@@ -11,7 +12,7 @@ cd ./work
 iverilog -o wave -g2005-sv -f ../filelist/TOP.f  
 vvp -n wave -lxt2
 gtkwave TOP.vcd
-del *.lxt
-del wave
-del TOP.vcd
+@REM del *.lxt
+@REM del wave
+@REM del TOP.vcd
 cd ..

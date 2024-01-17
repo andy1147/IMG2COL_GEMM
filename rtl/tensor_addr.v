@@ -1,3 +1,4 @@
+
 `include "../rtl/define.v"
 
 
@@ -120,14 +121,17 @@ reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] buffer_cnt;
 
 
 //count for kerenl_size row and col, to change channel or  break ADD_SELF
-reg [`KERNEL_SIZE-1 :0 ] kernel_size_row_cnt;
-reg [`KERNEL_SIZE-1 :0 ] kernel_size_col_cnt;
+(* DONT_TOUCH="TRUE" *)reg [`KERNEL_SIZE-1 :0 ] kernel_size_row_cnt;
+(* DONT_TOUCH="TRUE" *)reg [`KERNEL_SIZE-1 :0 ] kernel_size_col_cnt;
+
+(* DONT_TOUCH="TRUE" *)reg [`KERNEL_SIZE-1 :0 ] kernel_size_row_cnt_rep;
+(* DONT_TOUCH="TRUE" *)reg [`KERNEL_SIZE-1 :0 ] kernel_size_col_cnt_rep;
 
 
 
 // for each rf, count for their row and col
-reg [`TENSOR_SIZE-`STRIDE_SIZE-1:0] row_cnt;
-reg [`TENSOR_SIZE-`STRIDE_SIZE-1:0] col_cnt;
+reg [`TENSOR_SIZE-1:0] row_cnt;
+reg [`TENSOR_SIZE-1:0] col_cnt;
 
 
 //for each buffer, base_point is the most left col (the position in s2p_size_row_cnt==0)
@@ -220,6 +224,8 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         kernel_size_row_cnt <= 0;
         kernel_size_col_cnt <= 0;
+        kernel_size_row_cnt_rep <= 0;
+        kernel_size_col_cnt_rep <= 0;
     end
     else if(enable)begin
 
@@ -233,6 +239,18 @@ always @(posedge clk or negedge rstn) begin
             else begin
                 kernel_size_col_cnt <= (kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)?0:
                                         (kernel_size_row_cnt==kernel_size-1)?kernel_size_col_cnt +1 : kernel_size_col_cnt;
+            end
+
+
+            if(next_state ==SWITCH_RF)begin
+                kernel_size_col_cnt_rep <= kernel_size_col_cnt_save;
+            end
+            else if(buffer_cnt==buffer_row_nums && next_state==SWITCH_NEXT_BUFF)begin
+                kernel_size_col_cnt_rep <=0;
+            end
+            else begin
+                kernel_size_col_cnt_rep <= (kernel_size_col_cnt_rep==kernel_size-1 && kernel_size_row_cnt_rep==kernel_size-1)?0:
+                                        (kernel_size_row_cnt_rep==kernel_size-1)?kernel_size_col_cnt_rep +1 : kernel_size_col_cnt_rep;
             end
             // else if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
             //     kernel_size_col_cnt <=0;
@@ -254,6 +272,18 @@ always @(posedge clk or negedge rstn) begin
             end
             else begin
                 kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt +1;
+            end
+
+
+
+            if(next_state == SWITCH_RF)begin
+                kernel_size_row_cnt_rep <= kernel_size_row_cnt_save;
+            end
+            else if(buffer_cnt==buffer_row_nums && next_state==SWITCH_NEXT_BUFF)begin
+                kernel_size_row_cnt_rep <= 0;
+            end
+            else begin
+                kernel_size_row_cnt_rep <= (kernel_size_row_cnt_rep==kernel_size-1)? 0 : kernel_size_row_cnt_rep +1;
             end
             // else if(next_state == SELF_ADD)begin
             //     kernel_size_row_cnt <= (kernel_size_row_cnt==kernel_size-1)? 0 : kernel_size_row_cnt +1;
@@ -282,19 +312,34 @@ always @(posedge clk or negedge rstn) begin
             row_cnt <= 0;
             col_cnt <= 0;
         end
-        else if( next_state==SWITCH_RF)begin
-            row_cnt <= (row_cnt==out_feature_size)? 0: row_cnt+1 ;
-            col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
+
+        // else if(buffer_cnt== buffer_row_nums && (s2p_size_row_cnt == `S2P_SIZE-1 && s2p_size_col_cnt == `S2P_SIZE-1))begin //next buffer col
+        //     row_cnt <= (row_cnt==out_feature_size)? 0: row_cnt+1 ;
+        //     col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
+        //                  (row_cnt==out_feature_size)?col_cnt+1 :col_cnt;
+        // end
+        // else if((s2p_size_row_cnt == `S2P_SIZE-1 && s2p_size_col_cnt == `S2P_SIZE-1)) begin
+        //     row_cnt <= row_cnt_save;
+        //     col_cnt <= col_cnt_save;
+        // end
+        // else if( (s2p_size_row_cnt == `S2P_SIZE-1))begin
+        //     row_cnt <= (row_cnt==out_feature_size)? 0: row_cnt+1 ;
+        //     col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
+        //                  (row_cnt==out_feature_size)?col_cnt+1 :col_cnt;
+        // end
+
+
+        else if(s2p_size_row_cnt == `S2P_SIZE-1)begin
+            if(buffer_cnt!=buffer_row_nums && s2p_size_col_cnt == `S2P_SIZE-1)begin
+                row_cnt <= row_cnt_save;
+                col_cnt <= col_cnt_save;
+            end
+            else begin
+                row_cnt <= (row_cnt==out_feature_size)? 0: row_cnt+1 ;
+                col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
                          (row_cnt==out_feature_size)?col_cnt+1 :col_cnt;
-        end
-        else if(buffer_cnt== buffer_row_nums && next_state ==SWITCH_NEXT_BUFF)begin //next buffer col
-            row_cnt <= (row_cnt==out_feature_size)? 0: row_cnt+1 ;
-            col_cnt <= (col_cnt==out_feature_size && row_cnt==out_feature_size)? 0:
-                         (row_cnt==out_feature_size)?col_cnt+1 :col_cnt;
-        end
-        else if(next_state == SWITCH_NEXT_BUFF) begin
-            row_cnt <= row_cnt_save;
-            col_cnt <= col_cnt_save;
+            end
+            
         end
 
     end
@@ -340,8 +385,8 @@ always @(posedge clk or negedge rstn) begin
 
         
         if (s2p_size_col_cnt==0 && s2p_size_row_cnt ==0)begin
-            kernel_size_row_cnt_save <= kernel_size_row_cnt;
-            kernel_size_col_cnt_save <= kernel_size_col_cnt;
+            kernel_size_row_cnt_save <= kernel_size_row_cnt_rep;
+            kernel_size_col_cnt_save <= kernel_size_col_cnt_rep;
         end
 
 
@@ -354,16 +399,23 @@ always @(posedge clk or negedge rstn) begin
         if(done)begin
             base_point_change_col <= 0;            //next then initial
         end
+        // else if(row_cnt ==out_feature_size && ((buffer_cnt==0 && next_state == SWITCH_RF) || (buffer_cnt== buffer_row_nums && next_state == SWITCH_NEXT_BUFF)))begin
+        //     base_point_change_col <= base_point_change_col + t_mul_s;
+        // end
 
-        else if( buffer_cnt==0 && next_state == SWITCH_RF && row_cnt ==out_feature_size)begin
+        else if(((row_cnt ==out_feature_size) && (s2p_size_row_cnt == `S2P_SIZE-1)) && ((buffer_cnt==0)&& (s2p_size_col_cnt != `S2P_SIZE-1)|| ((buffer_cnt== buffer_row_nums) && (s2p_size_col_cnt == `S2P_SIZE-1))))begin
             base_point_change_col <= base_point_change_col + t_mul_s;
         end
 
-        else if(buffer_cnt== buffer_row_nums && next_state == SWITCH_NEXT_BUFF)begin
-            if(row_cnt == out_feature_size)begin
-                base_point_change_col <= base_point_change_col + t_mul_s;
-            end
-        end
+        // else if( buffer_cnt==0 && next_state == SWITCH_RF && row_cnt ==out_feature_size)begin
+        //     base_point_change_col <= base_point_change_col + t_mul_s;
+        // end
+
+        // else if(buffer_cnt== buffer_row_nums && next_state == SWITCH_NEXT_BUFF)begin
+        //     if(row_cnt == out_feature_size)begin
+        //         base_point_change_col <= base_point_change_col + t_mul_s;
+        //     end
+        // end
 
 
     end
@@ -426,12 +478,12 @@ always @(posedge clk or negedge rstn) begin
 
 
         else if(next_state == SWITCH_NEXT_BUFF )begin
-            if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin //
+            if(kernel_size_col_cnt_rep==kernel_size-1 && kernel_size_row_cnt_rep==kernel_size-1)begin //
                 base_point <=buffer_rightside[`S2P_SIZE -2] + switch_channel_add_nums;
                 flag_if_SWITCH_CHANNEL <=1;
                 flag_if_SWITCH_ROW <=0;
             end   
-            else if(kernel_size_row_cnt== kernel_size-1)begin //need to fix
+            else if(kernel_size_row_cnt_rep== kernel_size-1)begin //need to fix
                 base_point <=  buffer_rightside[`S2P_SIZE -2] + switch_row_add_nums;
                 flag_if_SWITCH_ROW <=1;
                 flag_if_SWITCH_CHANNEL <=0;

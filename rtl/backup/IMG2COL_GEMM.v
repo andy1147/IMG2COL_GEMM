@@ -1,6 +1,6 @@
 
 
-`include "../rtl/define.v"
+`include "../../rtl/define.v"
 
 module IMG2COL_GEMM (
         input clk,

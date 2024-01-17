@@ -4,7 +4,7 @@
 
 
 
-`include "../rtl/define.v"
+`include "../../rtl/define.v"
 
 
 module tw_addr_top (
