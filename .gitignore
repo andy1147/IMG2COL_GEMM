@@ -2,4 +2,4 @@
 work/
 vivado/
 rtl/define.v
-
+src/local_define.v
