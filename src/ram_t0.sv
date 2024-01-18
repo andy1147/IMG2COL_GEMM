@@ -1,6 +1,7 @@
 
 
-`include "../rtl/define.v"
+`include "../src/config.v"
+`include "../src/local_define.v"
 module ram_t0 (
     input clka,
     input [`ADDR_SIZE-1 :0] addra,

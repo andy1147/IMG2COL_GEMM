@@ -2,7 +2,7 @@
 
 
 
-`include "../rtl/define.v"
+`include "../src/config.v"
 module img2col (
 
         input clk,

@@ -1,6 +1,6 @@
 
 
-`include "../rtl/define.v"
+`include "../src/config.v"
 
 module para_prepare (
 

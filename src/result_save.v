@@ -3,7 +3,7 @@
 
 
 
-`include "../rtl/define.v"
+`include "../src/config.v"
 module result_save (
     input clk,
     input rstn,

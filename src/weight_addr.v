@@ -1,7 +1,6 @@
 
 
-
-`include "../rtl/define.v"
+`include "../src/config.v"
 
 //add tensor_done siginal .; if(tensor_done) then buffer_row_cnt +1 and next buffer row.
 // fix the error at padding_flag,delay 1 clk, avoid the last data missing. 2023.12.11

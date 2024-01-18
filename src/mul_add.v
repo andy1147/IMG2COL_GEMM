@@ -1,5 +1,5 @@
 
-`include "../rtl/define.v"
+`include "../src/config.v"
 
 module mul_add (
     input clk,

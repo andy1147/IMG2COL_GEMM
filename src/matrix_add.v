@@ -1,7 +1,7 @@
 
 
 
-`include "../rtl/define.v"
+`include "../src/config.v"
 
 //add result_valid_temp_d1 siginal   2023.12.13
 
