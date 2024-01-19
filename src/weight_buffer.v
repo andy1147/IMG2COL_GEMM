@@ -38,7 +38,7 @@ reg [`ADDR_SIZE -1 :0] addr;
 reg ena;
 reg wea;
 reg [`DATA_WIDTH -1 :0] din;
-reg [`DATA_WIDTH -1 :0] dout;
+wire [`DATA_WIDTH -1 :0] dout;
 
 
 
@@ -47,7 +47,9 @@ always @(*) begin
         ena = 1'b1;
         wea = 1'b1;
         addr = w_addr;
-        din = w_data;        
+        din = w_data;     
+
+        weight_data = `DATA_WIDTH'b0;    
     end
     else begin
         ena = w_addr_vld;

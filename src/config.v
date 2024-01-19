@@ -11,6 +11,8 @@
 `define STRIDE_SIZE 7
 
 
+`define SHIFT_WIDTH 8
+
 `define ADDR_SIZE 21
 
 `define DATA_WIDTH 8

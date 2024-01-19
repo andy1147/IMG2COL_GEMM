@@ -28,7 +28,11 @@ module ctrl_unit (
         output reg [`CHANNELS_SIZE-1:0] channels, 
         output reg [`STRIDE_SIZE-1:0] stride, 
         output reg [`KERNEL_NUMS_SIZE-1 :0] kernel_nums,
-        output reg start_conv  // the conv circuit start work;
+
+
+        output reg start_conv,  // the conv circuit start work;
+
+        output reg [`TENSOR_SIZE-1:0] n_tensor_size
 
 
         
@@ -45,7 +49,7 @@ module ctrl_unit (
 
 
 
-reg [`TENSOR_SIZE-1:0] n_tensor_size;
+//reg [`TENSOR_SIZE-1:0] n_tensor_size;
 reg [`CHANNELS_SIZE-1:0] n_channels;
 
 always @(posedge clk or negedge rstn) begin

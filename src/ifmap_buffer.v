@@ -26,16 +26,18 @@ module ifmap_buffer (
 
 //read data from ram, ram --> dma
         
-        input r_valid,
+        input r_ready,
         input [`ADDR_SIZE-1:0]  r_addr,
         output reg [`DATA_WIDTH-1 :0] r_data,
-        output reg r_ready,
+        output reg r_valid,
+        output reg r_last,
 
 
 
 // internal interface
 
         input w_done,
+        input [`TENSOR_SIZE-1:0] n_tensor_size,
 
 
 // internal read tensor data
@@ -121,18 +123,18 @@ reg wea2;
 reg [`DATA_WIDTH -1 :0] din1;
 reg [`DATA_WIDTH -1 :0] din2;
 
-reg [`DATA_WIDTH -1 :0] dout1;
-reg [`DATA_WIDTH -1 :0] dout2;
+wire [`DATA_WIDTH -1 :0] dout1;
+wire [`DATA_WIDTH -1 :0] dout2;
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
-        r_ready <= 0;
+        r_valid <= 0;
     end
-    else if(conv_en)begin
-        r_ready <= 0;
+    else if(conv_en || r_last)begin
+        r_valid <= 0;
     end
     else if(w_done)begin
-        r_ready <= 1;
+        r_valid <= 1;
     end
 end
 
@@ -147,6 +149,15 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
+always @(posedge clk) begin
+    if(r_ready && r_valid && r_addr == n_tensor_size-1)begin
+        r_last <= 1;
+    end
+    else begin
+        r_last <= 0;
+    end
+end
+
 always @(*) begin
 
     if(w_ready && w_valid)begin
@@ -154,6 +165,15 @@ always @(*) begin
         wea1 = 1'b1;
         addr1 = w_addr;
         din1 = w_data;
+
+
+        r_data = `DATA_WIDTH'b0;
+        tensor_data = `DATA_WIDTH'b0;
+        
+        ena2 =result_w_ena;
+        wea2 = result_w_vld;
+        addr2 = result_addr;
+        din2 = result_data; 
     end
 
     else if(r_ready && r_valid)begin
@@ -163,6 +183,14 @@ always @(*) begin
             addr1 = r_addr;
             din1 = `DATA_WIDTH'b0;
             r_data = dout1;
+
+
+            ena2 =t_addr_vld;
+            wea2 = 1'b0;
+            addr2 = tensor_addr;
+            din2 = `DATA_WIDTH'b0; 
+            tensor_data = dout2; 
+
         end
         else begin
             ena2= 1'b1;
@@ -170,6 +198,13 @@ always @(*) begin
             addr2 = r_addr;
             din2 = `DATA_WIDTH'b0;
             r_data = dout2;
+
+
+            ena1 = t_addr_vld;
+            wea1 = 1'b0;
+            addr1 = tensor_addr;
+            din1 = `DATA_WIDTH'b0;
+            tensor_data = dout1; 
         end
     end
     else begin
@@ -185,7 +220,9 @@ always @(*) begin
                     ena2 =result_w_ena;
                     wea2 = result_w_vld;
                     addr2 = result_addr;
-                    din2 = result_data;  
+                    din2 = result_data; 
+
+                    r_data = `DATA_WIDTH'b0; 
 
                 
                 end
@@ -197,11 +234,15 @@ always @(*) begin
                     addr1 = result_addr;
                     din1 = result_data;
 
+
                     ena2 =t_addr_vld;
                     wea2 = 1'b0;
                     addr2 = tensor_addr;
                     din2 = `DATA_WIDTH'b0; 
-                    tensor_data = dout2;                
+                    tensor_data = dout2;  
+
+
+                    r_data = `DATA_WIDTH'b0;               
                 end
             default: begin
                     ena1 = t_addr_vld;
@@ -214,6 +255,9 @@ always @(*) begin
                     wea2 = result_w_vld;
                     addr2 = result_addr;
                     din2 = result_data; 
+
+
+                    r_data = `DATA_WIDTH'b0; 
                 end
         endcase
     end

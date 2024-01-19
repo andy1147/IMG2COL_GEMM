@@ -85,8 +85,8 @@ reg o_conv_done;
 reg [`S2P_SIZE :0] o_result_row_cnt;
 reg [`S2P_SIZE :0] o_result_col_cnt;
 
-reg [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] result_buffer_cnt;
-reg [`TENSOR_SIZE*2 :0] img2col_t_cnt;
+//reg [`TENSOR_SIZE*2+`KERNEL_NUMS_SIZE :0] result_buffer_cnt;
+//reg [`TENSOR_SIZE*2 :0] img2col_t_cnt;
 
 
 
@@ -98,15 +98,15 @@ reg [`KERNEL_SIZE+`KERNEL_SIZE+`CHANNELS_SIZE-1 : 0] matrix_add_cnt;
 //********************************************************************************************************************
 
 
-reg [1:0] matrix_mul_done1_delay;
-reg matrix_mul_done0_delay;
+reg  matrix_mul_done1_delay;
+//reg matrix_mul_done0_delay;
 
 integer i =0;
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         matrix_add_cnt <= 0;
     end
-    else if( matrix_mul_done1_delay[0])begin
+    else if( matrix_mul_done1_delay)begin
         matrix_add_cnt <= (matrix_add_cnt==matrix_add_nums)?0:matrix_add_cnt+1;
     end 
 end
@@ -115,11 +115,11 @@ end
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         matrix_mul_done1_delay <= 0;
-        matrix_mul_done0_delay <= 0;
+      //  matrix_mul_done0_delay <= 0;
     end
     else  begin
-        matrix_mul_done1_delay <= {matrix_mul_done1_delay[0],matrix_mul_done[1]};
-        matrix_mul_done0_delay <= matrix_mul_done[0];
+        matrix_mul_done1_delay <= matrix_mul_done[1];
+     //   matrix_mul_done0_delay <= matrix_mul_done[0];
     end
 end
 
@@ -138,8 +138,8 @@ always @(posedge clk or negedge rstn) begin
 end
 
 
-wire shift_all;
-assign shift_all= shift_all_reg;
+// wire shift_all;
+// assign shift_all= shift_all_reg;
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin

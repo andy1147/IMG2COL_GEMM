@@ -8,7 +8,7 @@ module result_save (
     input clk,
     input rstn,
     input [`RESULT_SIZE -1 :0] result,
-    input [3:0]   shift,
+    input [`SHIFT_WIDTH-1:0]   shift,
     input [3:0] result_valid,
     input conv_done,
 

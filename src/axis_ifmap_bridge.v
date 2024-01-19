@@ -1,22 +1,43 @@
 
 
+`include "../src/config.v"
+module axis_ifmp_bridge #
+	(
+		parameter integer C_S_AXIS_TDATA_WIDTH	= 8,
+                parameter integer C_M_AXIS_TDATA_WIDTH	= 8
+	)(
 
 
-//write data from dma,  dma --> ram
-        input [`ADDR_SIZE-1:0] w_addr,
+// RECEIVE DATA FROM DMA -- AXIS S2MM PORTS 
+        input wire  S_AXIS_ACLK,
+        input wire  S_AXIS_ARESETN,
+        output wire  S_AXIS_TREADY,
+        input wire [C_S_AXIS_TDATA_WIDTH-1 : 0] S_AXIS_TDATA,
+        input wire [(C_S_AXIS_TDATA_WIDTH/8)-1 : 0] S_AXIS_TSTRB,
+        input wire  S_AXIS_TLAST,
+        input wire  S_AXIS_TVALID,
 
-        input [`DATA_WIDTH-1 :0] s_axis_tdata,
-        input s_axis_tvalid,
-        input s_axis_tlast,
-        input s_axis_tstrb,
-        output s_axis_tready,
 
 
-//read data from ram, ram --> dma
-        input [`ADDR_SIZE-1:0]  rd_o_addr,
+// SEND DATA TO DMA -- AXIS MM2S PORTS 
+        input wire  M_AXIS_ACLK,
+        input wire  M_AXIS_ARESETN,
+        output wire  M_AXIS_TVALID,
+        output wire [C_M_AXIS_TDATA_WIDTH-1 : 0] M_AXIS_TDATA,
+        output wire [(C_M_AXIS_TDATA_WIDTH/8)-1 : 0] M_AXIS_TSTRB,
+        output wire  M_AXIS_TLAST,
+        input wire  M_AXIS_TREADY
 
-        input m_axis_tready,
-        output [`DATA_WIDTH-1 :0] m_axis_tdata,
-        output m_axis_tlast,
-        output m_axis_tstrb,
-        output m_axis_tvalid,
+        
+);
+
+
+
+
+
+
+        
+endmodule
+
+
+        

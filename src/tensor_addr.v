@@ -583,19 +583,19 @@ always @(*) begin
         SELF_ADD: begin
 
             if(s2p_size_row_cnt == `S2P_SIZE-1 && s2p_size_col_cnt == `S2P_SIZE-1)begin
-                next_state <= SWITCH_NEXT_BUFF;
+                next_state = SWITCH_NEXT_BUFF;
             end
             else if(s2p_size_row_cnt == `S2P_SIZE-1)begin
-                next_state <= SWITCH_RF;
+                next_state = SWITCH_RF;
             end
             else if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
-                next_state <= SWITCH_CHANNEL;
+                next_state = SWITCH_CHANNEL;
             end
             else if(kernel_size_row_cnt== kernel_size-1)begin
-                next_state <= SWITCH_ROW;
+                next_state = SWITCH_ROW;
             end
             else begin
-                next_state <= SELF_ADD;
+                next_state = SELF_ADD;
             end  
         end
 
@@ -603,16 +603,16 @@ always @(*) begin
 
 
             if(s2p_size_row_cnt == `S2P_SIZE-1 && s2p_size_col_cnt == `S2P_SIZE-1)begin
-                next_state <= SWITCH_NEXT_BUFF;
+                next_state = SWITCH_NEXT_BUFF;
             end
             else if(s2p_size_row_cnt == `S2P_SIZE-1)begin
-                next_state <= SWITCH_RF;
+                next_state = SWITCH_RF;
             end
             else if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
-                next_state <= SWITCH_CHANNEL;
+                next_state = SWITCH_CHANNEL;
             end
             else begin
-                next_state <= SELF_ADD;
+                next_state = SELF_ADD;
             end
 
         end
@@ -620,41 +620,41 @@ always @(*) begin
         SWITCH_RF:begin
 
             if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
-                next_state <= SWITCH_CHANNEL;
+                next_state = SWITCH_CHANNEL;
             end
 
             else if(kernel_size_row_cnt== kernel_size-1)begin
-                next_state <= SWITCH_ROW;
+                next_state = SWITCH_ROW;
             end
             else begin
-                next_state <= SELF_ADD;
+                next_state = SELF_ADD;
             end
         end
 
         SWITCH_NEXT_BUFF:begin
             if(kernel_size_col_cnt==kernel_size-1 && kernel_size_row_cnt==kernel_size-1)begin
-                next_state <= SWITCH_CHANNEL;
+                next_state = SWITCH_CHANNEL;
             end
 
             else if(kernel_size_row_cnt== kernel_size-1)begin
-                next_state <= SWITCH_ROW;
+                next_state = SWITCH_ROW;
             end
             else begin
-                next_state <= SELF_ADD;
+                next_state = SELF_ADD;
             end
         end
         SWITCH_CHANNEL:begin
             if(s2p_size_row_cnt == `S2P_SIZE-1 && s2p_size_col_cnt == `S2P_SIZE-1)begin
-                next_state <= SWITCH_NEXT_BUFF;
+                next_state = SWITCH_NEXT_BUFF;
             end
             else if(s2p_size_row_cnt == `S2P_SIZE-1)begin
-                next_state <= SWITCH_RF;
+                next_state = SWITCH_RF;
             end
             else if(kernel_size_row_cnt== kernel_size-1)begin
-                next_state <= SWITCH_ROW;
+                next_state = SWITCH_ROW;
             end
             else begin
-                next_state <= SELF_ADD;
+                next_state = SELF_ADD;
             end 
         end
         default: next_state = IDLE;
