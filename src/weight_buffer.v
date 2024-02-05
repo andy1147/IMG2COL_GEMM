@@ -17,7 +17,7 @@ module weight_buffer (
 
 //dma write port.. dma--> ram
     output reg w_ready,
-    input [`ADDR_SIZE-1:0] w_addr,
+    
     input [`DATA_WIDTH-1:0] w_data,
     input w_valid,
     input w_last,
@@ -40,6 +40,21 @@ reg wea;
 reg [`DATA_WIDTH -1 :0] din;
 wire [`DATA_WIDTH -1 :0] dout;
 
+
+
+reg[`ADDR_SIZE-1:0] w_addr ;
+
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
+        w_addr <= 0;
+    end
+    else if(w_valid && w_ready)begin
+        w_addr <= w_addr +1;
+    end
+    else if(w_last)begin
+        w_addr <= 0;
+    end
+end
 
 
 always @(*) begin

@@ -17,7 +17,6 @@ module ifmap_buffer (
 
 
 //write data from dma,  dma --> ram
-        input [`ADDR_SIZE-1:0] w_addr,
         input [`DATA_WIDTH-1 :0] w_data,
         input w_valid,
         input w_last,
@@ -27,9 +26,8 @@ module ifmap_buffer (
 //read data from ram, ram --> dma
         
         input r_ready,
-        input [`ADDR_SIZE-1:0]  r_addr,
         output reg [`DATA_WIDTH-1 :0] r_data,
-        output reg r_valid,
+        output r_valid,
         output reg r_last,
 
 
@@ -66,6 +64,38 @@ localparam STATE2 = 3'b100;
 
 reg [2:0] current_state;
 reg [2:0] next_state;
+
+
+reg [`ADDR_SIZE-1:0] w_addr;
+reg [`ADDR_SIZE-1:0]  r_addr;
+reg r_vld_delay1;
+reg r_vld;
+
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
+        w_addr <= 0;
+    end
+    else if(w_valid && w_ready)begin
+        w_addr <= w_addr +1;
+    end
+    else if(w_last)begin
+        w_addr <= 0;
+    end
+end
+
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
+        r_addr <= 0;
+    end
+    else if(r_last)begin
+        r_addr <= 0;
+    end
+    else if(r_vld && r_ready)begin
+        r_addr <= (r_addr == n_tensor_size-1)?0:r_addr +1;
+    end
+
+end
+
 
 
 always @(posedge clk or negedge rstn) begin
@@ -126,17 +156,31 @@ reg [`DATA_WIDTH -1 :0] din2;
 wire [`DATA_WIDTH -1 :0] dout1;
 wire [`DATA_WIDTH -1 :0] dout2;
 
+
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
-        r_valid <= 0;
+       r_vld <= 0;
     end
     else if(conv_en || r_last)begin
-        r_valid <= 0;
+       r_vld <= 0;
     end
     else if(w_done)begin
-        r_valid <= 1;
+       r_vld <= 1;
     end
 end
+
+
+always @(posedge clk or negedge rstn) begin
+    if(!rstn)begin
+       r_vld_delay1 <= 0;
+    end
+    else begin
+       r_vld_delay1 <=r_vld;
+    end
+end
+
+assign r_valid =r_vld && r_vld_delay1;
+
 
 
 always @(posedge clk or negedge rstn) begin
@@ -150,7 +194,7 @@ end
 
 
 always @(posedge clk) begin
-    if(r_ready && r_valid && r_addr == n_tensor_size-1)begin
+    if(r_last==0 && r_ready &&r_vld && r_addr == n_tensor_size-1)begin
         r_last <= 1;
     end
     else begin
@@ -176,7 +220,7 @@ always @(*) begin
         din2 = result_data; 
     end
 
-    else if(r_ready && r_valid)begin
+    else if(r_ready &&r_vld)begin
         if(current_state == STATE1)begin
             ena1= 1'b1;
             wea1 =1'b0;

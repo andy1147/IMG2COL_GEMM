@@ -30,7 +30,6 @@ module CONV_ACC (
 
 //AXI_STREAM
         //ifmap_buffer ports 
-        input [`ADDR_SIZE-1:0] ifmap_w_addr,
         input [`DATA_WIDTH-1 :0] ifmap_w_data,
         input ifmap_w_valid,
         input ifmap_w_last,
@@ -38,7 +37,6 @@ module CONV_ACC (
 
 
         input r_ready,
-        input [`ADDR_SIZE-1:0]  r_addr,
         output  [`DATA_WIDTH-1 :0] r_data,
         output  r_valid,
         output  r_last,
@@ -46,7 +44,6 @@ module CONV_ACC (
 
         //weight buffer ports
         output  weight_w_ready,
-        input [`ADDR_SIZE-1:0] weight_w_addr,
         input [`DATA_WIDTH-1:0] weight_w_data,
         input weight_w_valid,
         input weight_w_last
@@ -154,14 +151,13 @@ ifmap_buffer  u_ifmap_buffer (
     .enable                  ( enable                             ),
     .conv_en                 ( conv_en                            ),
 
-    .w_addr                  ( ifmap_w_addr   [`ADDR_SIZE-1:0]    ),
+
     .w_data                  ( ifmap_w_data   [`DATA_WIDTH-1 :0]  ),
     .w_valid                 ( ifmap_w_valid                      ),
     .w_last                  ( ifmap_w_last                       ),
     .w_ready                 ( ifmap_w_ready                      ),
 
     .r_ready                 ( r_ready                            ),
-    .r_addr                  ( r_addr         [`ADDR_SIZE-1:0]    ),
     .r_data                  ( r_data         [`DATA_WIDTH-1 :0]  ),
     .r_valid                 ( r_valid                            ),
     .r_last                  ( r_last                             ),
@@ -191,7 +187,6 @@ weight_buffer  u_weight_buffer (
     .w_done                  ( w_done                         ),
 
     .w_ready                 ( weight_w_ready                 ),
-    .w_addr                  ( weight_w_addr[`ADDR_SIZE-1:0]  ),
     .w_data                  ( weight_w_data[`DATA_WIDTH-1:0] ),
     .w_valid                 ( weight_w_valid                 ),
     .w_last                  ( weight_w_last                  ),
