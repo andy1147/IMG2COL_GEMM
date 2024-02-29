@@ -25,6 +25,14 @@ reg [`DATA_WIDTH-1:0] mem [0:`MEM_LENGTH-1];
 //`endif 
 
 
+`ifdef SIM
+integer i;
+initial begin
+  for(i=0;i<= `MEM_LENGTH -1; i= i+1)begin
+    mem[i] <= 0;
+  end
+end
+`endif 
 
 //`ifdef SIM_ALL
 //  reg [`SIM_GROUP_NUMS_SIZE-1:0] count=0;

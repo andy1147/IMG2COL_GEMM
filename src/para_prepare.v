@@ -16,6 +16,9 @@ module para_prepare (
         output enable,
         output o_rstn,
 
+        // to ctrl unit
+        output  [`TENSOR_SIZE*2 :0] o_T_sub_K_div_S2,
+
 
         //to tensor_addr
         // output [`KERNEL_SIZE-1:0] o_t_addr_ks,
@@ -352,6 +355,7 @@ always @(posedge clk or negedge rstn) begin
         T_sub_K_div_S2_done <= 1;
     end
 end
+assign o_T_sub_K_div_S2 = T_sub_K_div_S2 ;
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin

@@ -99,9 +99,9 @@ end
 
 
 wire signed [`DATA_WIDTH-1 :0] fix_result;
-assign fix_result = ($signed(result) >>> shift) > 127 ? 127 :
-                    ($signed(result) >>> shift) < -128 ?-128:
-                    ($signed(result) >>> shift);
+assign fix_result = $signed(($signed(result) >>> shift)) > 127 ? 127 :
+                    $signed(($signed(result) >>> shift)) < -128 ? -128:
+                    $signed(($signed(result) >>> shift));
 
 
 

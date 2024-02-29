@@ -35,7 +35,7 @@ module ifmap_buffer (
 // internal interface
 
         input w_done,
-        input [`TENSOR_SIZE-1:0] n_tensor_size,
+        input [`TENSOR_SIZE + `TENSOR_SIZE + `KERNEL_NUMS_SIZE -1 : 0]  n_ifmap_num,
 
 
 // internal read tensor data
@@ -75,12 +75,13 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         w_addr <= 0;
     end
-    else if(w_valid && w_ready)begin
-        w_addr <= w_addr +1;
-    end
     else if(w_last)begin
         w_addr <= 0;
     end
+    else if(w_valid && w_ready)begin
+        w_addr <= w_addr +1;
+    end
+
 end
 
 always @(posedge clk or negedge rstn) begin
@@ -91,7 +92,7 @@ always @(posedge clk or negedge rstn) begin
         r_addr <= 0;
     end
     else if(r_vld && r_ready)begin
-        r_addr <= (r_addr == n_tensor_size-1)?0:r_addr +1;
+        r_addr <= (r_addr == n_ifmap_num-1)?0:r_addr +1;
     end
 
 end
@@ -194,7 +195,7 @@ end
 
 
 always @(posedge clk) begin
-    if(r_last==0 && r_ready &&r_vld && r_addr == n_tensor_size-1)begin
+    if(r_last==0 && r_ready &&r_vld && r_addr == n_ifmap_num-1)begin
         r_last <= 1;
     end
     else begin
@@ -221,7 +222,7 @@ always @(*) begin
     end
 
     else if(r_ready &&r_vld)begin
-        if(current_state == STATE1)begin
+        if(current_state == STATE2)begin
             ena1= 1'b1;
             wea1 =1'b0;
             addr1 = r_addr;

@@ -21,6 +21,7 @@ module ctrl_unit (
         input w_done,
         input n_para_done,
         input [`TENSOR_SIZE-1:0] n_ofs, 
+        input [`TENSOR_SIZE*2 :0] n_T_sub_K_div_S2,
 
 
         output reg [`TENSOR_SIZE-1:0] tensor_size, 
@@ -32,7 +33,7 @@ module ctrl_unit (
 
         output reg start_conv,  // the conv circuit start work;
 
-        output reg [`TENSOR_SIZE-1:0] n_tensor_size
+       (*use_dsp = "yes"*) output reg [`TENSOR_SIZE + `TENSOR_SIZE + `KERNEL_NUMS_SIZE -1 : 0] n_ifmap_num
 
 
         
@@ -49,17 +50,19 @@ module ctrl_unit (
 
 
 
-//reg [`TENSOR_SIZE-1:0] n_tensor_size;
+reg [`TENSOR_SIZE-1:0] n_tensor_size;
 reg [`CHANNELS_SIZE-1:0] n_channels;
 
 always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
+        n_ifmap_num <= 0;
         n_tensor_size <= 0;
         n_channels <= 0;
     end
     else if(n_para_done)begin
         n_tensor_size <= n_ofs +1;
         n_channels <= axi_kernel_nums;
+        n_ifmap_num <= n_T_sub_K_div_S2 * axi_kernel_nums ;
     end
 end
 
@@ -77,6 +80,9 @@ end
         end
         else if(enable) begin
             current_state <= next_state;
+        end
+        else begin
+            current_state <= IDLE;
         end
     end
 

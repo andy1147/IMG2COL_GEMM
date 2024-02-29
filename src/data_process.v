@@ -61,7 +61,7 @@ always @(posedge clk or negedge rstn) begin
         // tw_cnt <= 0;
         // flag_buffer_reg <= 0;
     end
-    else begin
+    else if(start_sync)begin
         // tw_cnt <= (tw_cnt==`S2P_SIZE**2-1)?0:tw_cnt+1;
         // flag_buffer_reg <= (tw_cnt==`S2P_SIZE**2-1);
         t_buffer[0 +: `DATA_WIDTH] <= t_data_fix;

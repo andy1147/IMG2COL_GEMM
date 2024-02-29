@@ -32,7 +32,8 @@ module IMG2COL_GEMM (
         output o_w_addr_valid,
 
         output para_done,
-        output [`TENSOR_SIZE-1:0] n_ofs
+        output [`TENSOR_SIZE-1:0] n_ofs,
+        output [`TENSOR_SIZE*2 :0] n_T_sub_K_div_S2
 
 );
 
@@ -108,6 +109,7 @@ para_prepare  u_para_prepare (
     .enable                  ( enable                                                            ),
     .o_rstn                  ( o_rstn                                                            ),
 
+    .o_T_sub_K_div_S2        ( n_T_sub_K_div_S2                                                  ),
 
     .o_t_addr_itlr           ( img2col_t_length_rem    [`S2P_SIZE-1 : 0]                                ),
     .o_t_addr_tms            ( t_mul_s     [`TENSOR_SIZE + `STRIDE_SIZE -1 :0]              ),

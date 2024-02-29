@@ -15,7 +15,14 @@ module ram_t1 (
 reg [`DATA_WIDTH-1:0] mem [0:`MEM_LENGTH-1];
 
 
-
+`ifdef SIM
+integer i;
+initial begin
+  for(i=0;i<= `MEM_LENGTH -1; i= i+1)begin
+    mem[i] <= 0;
+  end
+end
+`endif 
 //`ifdef SIM_DETAIL
 //  initial begin
 //      //$readmemb("C:/Users/Qdream/OneDrive/Projects/IMG2COL/python/img2col/data/9tensor_bin.txt",mem);

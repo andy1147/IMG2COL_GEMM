@@ -10,7 +10,8 @@ module CONV_ACC (
         input clk,     //sys
         input rstn,  //sys
 
-
+//OUTPUT W_DONE
+        output w_done,
 //AXI_LITE
         //global ports
         input enable, //sys enbale
@@ -61,13 +62,14 @@ wire [`STRIDE_SIZE-1:0] stride;
 wire [`KERNEL_NUMS_SIZE-1 :0] kernel_nums;
 
 
-wire w_done;
+//wire w_done;
 wire n_para_done;
 wire [`TENSOR_SIZE-1:0] n_ofs;
 wire start_conv;
 
 
-wire [`TENSOR_SIZE-1:0] n_tensor_size;
+wire [`TENSOR_SIZE*2 :0] n_T_sub_K_div_S2;
+wire [`TENSOR_SIZE + `TENSOR_SIZE + `KERNEL_NUMS_SIZE -1 : 0] n_ifmap_num;
 
 ctrl_unit  u_ctrl_unit (
     .clk                     ( clk                                       ),
@@ -85,6 +87,7 @@ ctrl_unit  u_ctrl_unit (
     .w_done                  ( w_done                                    ),
     .n_para_done             ( n_para_done                               ),
     .n_ofs                   ( n_ofs            [`TENSOR_SIZE-1:0]       ),
+    .n_T_sub_K_div_S2        ( n_T_sub_K_div_S2                          ),
 
     .tensor_size             ( tensor_size      [`TENSOR_SIZE-1:0]       ),
     .kernel_size             ( kernel_size      [`KERNEL_SIZE-1:0]       ),
@@ -93,7 +96,7 @@ ctrl_unit  u_ctrl_unit (
     .kernel_nums             ( kernel_nums      [`KERNEL_NUMS_SIZE-1 :0] ),
 
     .start_conv              ( start_conv                                ),
-    .n_tensor_size           ( n_tensor_size    [`TENSOR_SIZE-1:0]       )
+    .n_ifmap_num             ( n_ifmap_num                               )
 );
 
 
@@ -140,7 +143,8 @@ IMG2COL_GEMM  u_IMG2COL_GEMM (
     .o_w_addr_valid          ( w_addr_valid                             ),
 
     .para_done               ( n_para_done                              ),
-    .n_ofs                   ( n_ofs            [`TENSOR_SIZE-1:0]      )
+    .n_ofs                   ( n_ofs            [`TENSOR_SIZE-1:0]      ),
+    .n_T_sub_K_div_S2        ( n_T_sub_K_div_S2                         )
 );
 
 
@@ -163,7 +167,7 @@ ifmap_buffer  u_ifmap_buffer (
     .r_last                  ( r_last                             ),
 
     .w_done                  ( w_done                             ),
-    .n_tensor_size           ( n_tensor_size  [`TENSOR_SIZE-1:0]  ),
+    .n_ifmap_num             ( n_ifmap_num                        ),
 
     .tensor_addr             ( tensor_addr    [`ADDR_SIZE-1:0]    ),
     .t_addr_vld              ( t_addr_valid                       ),

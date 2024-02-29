@@ -26,7 +26,8 @@
 	)
 	(
 		// Users to add ports here
-
+		input conv_en,
+		output w_done,
 		// User ports ends
 		// Do not modify the ports beyond this line
 
@@ -129,7 +130,7 @@
 
 	assign m_t_axis_tstrb = 4'b0001;
 
-
+	assign m_t_axis_tdata[C_M_T_AXIS_TDATA_WIDTH-1 : `DATA_WIDTH] = 0;
 
 
 
@@ -137,16 +138,17 @@
 	CONV_ACC  u_CONV_ACC (
 		.clk                     (   s_axi_aclk  ),
 		.rstn                    (   s_axi_aresetn   ),
-
+		.w_done                  (   w_done          ),
 	//AXI_LITE
-		.enable                  (   slv_reg0[31]      ),
-		.conv_en                 (   slv_reg0[30]   ),
-		.axi_tensor_size         (   slv_reg0[29:20]  ),
-		.axi_kernel_size         (   slv_reg1[6:0] ),
-		.axi_channels            (   slv_reg0[19:10]  ),
-		.axi_stride              (   slv_reg1[13:7]    ),
-		.axi_kernel_nums         ( 	 slv_reg0[9:0]    ),
-		.shift                   (   slv_reg1[21:14]   ),
+		.enable                  (   slv_reg1[8]      ),
+		.conv_en                 (   conv_en   ),
+		.axi_tensor_size         (   slv_reg0[31:22]  ),
+		.axi_kernel_size         (   slv_reg0[15:8] ),
+		.axi_stride              (   slv_reg0[7:0]    ),
+
+		.axi_channels            (   slv_reg1[31:22]  ),
+		.axi_kernel_nums         ( 	 slv_reg1[21:12]    ),
+		.shift                   (   slv_reg1[7:0]   ),
 
 	//AXI_STREAM_SLAVE
 		.ifmap_w_data            (  s_t_axis_tdata[`DATA_WIDTH-1 : 0] ),
