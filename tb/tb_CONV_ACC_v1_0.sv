@@ -145,24 +145,60 @@ integer fid_weight ;
 integer fid_para;
 reg [39:0] para=0;
 
+integer errors = 0;
+reg [7:0] soft_data;
+integer fid_result ;
+
 initial
 begin
     wait(s_axi_aresetn);
-    fid_tensor=$fopen($sformatf({`DATA_PATH,"%0dtensor_bin.txt"},`DETAIL_NUM),"r");
-    fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
-    fid_para=$fopen($sformatf({`DATA_PATH,"%0dpara.txt"},`DETAIL_NUM),"r");
-    $fscanf(fid_para,"%b",para);
-    $fclose(fid_para);
+
+    fid_result=$fopen($sformatf({`DATA_PATH,"%0dresult_dec.txt"},2),"r");
+    // fid_tensor=$fopen($sformatf({`DATA_PATH,"%0dtensor_bin.txt"},`DETAIL_NUM),"r");
+    // fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
+    // fid_para=$fopen($sformatf({`DATA_PATH,"%0dpara.txt"},`DETAIL_NUM),"r");
+    // $fscanf(fid_para,"%b",para);
+    // $fclose(fid_para);
     fork
-        send_ifmap();
-        send_weight();
+        send_ifmap(0);
+        send_weight(0);
     join
 
-    send_slv_reg(); 
+    send_slv_reg(0); 
 
     conv_en <= 1;
     @(posedge s_axi_aclk);
     conv_en <= 0 ;
+
+
+
+    wait(w_done);
+  //  fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
+    send_weight(1);
+    send_slv_reg(1);
+    conv_en <= 1;
+    @(posedge s_axi_aclk);
+    conv_en <= 0 ;
+
+
+
+    wait(w_done);
+ //   fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
+    send_weight(2);
+    send_slv_reg(2);
+    conv_en <= 1;
+    @(posedge s_axi_aclk);
+    conv_en <= 0 ;
+
+
+//     wait(w_done);
+//  //   fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
+//     send_weight(3);
+//     send_slv_reg(3);
+//     conv_en <= 1;
+//     @(posedge s_axi_aclk);
+//     conv_en <= 0 ;
+
 
     receive_ifmap();
     #(PERIOD * 10);
@@ -171,8 +207,50 @@ begin
 end
 
 
+reg self_check_done = 0;
+always @(posedge s_axi_aclk) begin
+    if(m_t_axis_tvalid && m_t_axis_tready)begin
+            if(m_t_axis_tlast)begin
+                self_check_done <= 1;
+            end
+            $fscanf(fid_result,"%d",soft_data);
+            if($signed(soft_data)==$signed(m_t_axis_tdata[7:0]))begin
+                $display("SOFT:  %0d,  HARD:   %0d      correct!",$signed(soft_data),$signed(m_t_axis_tdata[7:0]));
+            end
+            else begin
+                errors<=errors+1;
+                $display("%d       %d     the result is error!",$signed(soft_data),$signed(m_t_axis_tdata[7:0]));
+                $display("The tensor_size is %0d",para[39:32]);
+                $display("The kernel_size is %0d",para[31:24]);
+                $display("The kernel_nums is %0d",para[23:16]);
+                $display("The channels is %0d",para[15:8]);
+                $display("The stride is %0d",para[7:0]);
+            end  
+    end
 
-task send_slv_reg();
+    if(self_check_done)begin
+        if(errors==0)begin
+            $fclose(fid_result);
+            $display("TEST PASS SUCCESSFULLY!");
+        end
+        else begin
+            $fclose(fid_result);
+            $display("**************************************************");
+            $display("*****ERROR!!!,THE TOTAL ERROES NUMS IS %d*********",errors);
+            $display("**************************************************");
+            $stop;
+        end
+    end
+
+end
+
+
+
+task send_slv_reg;
+    input [31:0] para_num; 
+    fid_para=$fopen($sformatf({`DATA_PATH,"%0dpara.txt"},para_num),"r");
+    $fscanf(fid_para,"%b",para);
+    $fclose(fid_para);
     fork
         s_waddr();
         s_wdata();
@@ -223,14 +301,17 @@ endtask : s_wdata
 
 
 task s_bresp();
-    wait (s_axi_bvalid);
+
+   // wait (s_axi_bvalid);
+    @(posedge s_axi_bvalid); // reg ,exist delay
     @(posedge s_axi_aclk);
     s_axi_bready <= '1;
 
     @(posedge s_axi_aclk);
     s_axi_bready <= '0;
 
-    wait (s_axi_bvalid);
+   // wait (s_axi_bvalid);
+    @(posedge s_axi_bvalid);
     @(posedge s_axi_aclk);
     s_axi_bready <= '1;
 
@@ -240,7 +321,9 @@ endtask : s_bresp
 
 
 
-task send_ifmap();
+task send_ifmap;
+    input [31:0] tensor_num;
+    fid_tensor=$fopen($sformatf({`DATA_PATH,"%0dtensor_bin.txt"},tensor_num),"r");
     $display("**************SEND IFMAP START*********************");
     while (!$feof(fid_tensor)) begin
         @(posedge s_axi_aclk);
@@ -264,7 +347,9 @@ endtask
 
 
 
-task send_weight();
+task send_weight;
+    input [31:0] weight_num;
+    fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},weight_num),"r");
     $display("**************SEND WEIGHT START*********************");
     while (!$feof(fid_weight)) begin
         @(posedge s_axi_aclk);

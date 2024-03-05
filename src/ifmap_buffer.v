@@ -221,7 +221,7 @@ always @(*) begin
         din2 = result_data; 
     end
 
-    else if(r_ready &&r_vld)begin
+    else if(r_vld)begin
         if(current_state == STATE2)begin
             ena1= 1'b1;
             wea1 =1'b0;

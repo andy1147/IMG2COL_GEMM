@@ -48,12 +48,13 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         w_addr <= 0;
     end
-    else if(w_valid && w_ready)begin
-        w_addr <= w_addr +1;
-    end
     else if(w_last)begin
         w_addr <= 0;
     end
+    else if(w_valid && w_ready)begin
+        w_addr <= w_addr +1;
+    end
+
 end
 
 
