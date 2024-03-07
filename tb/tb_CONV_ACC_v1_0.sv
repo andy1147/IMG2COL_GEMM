@@ -9,9 +9,7 @@ parameter PERIOD                  = 10;
 parameter C_S_AXI_DATA_WIDTH      = 32;
 parameter C_S_AXI_ADDR_WIDTH      = 4 ;
 parameter C_M_T_AXIS_TDATA_WIDTH  = 32;
-parameter C_M_T_AXIS_START_COUNT  = 32;
-parameter C_S_T_AXIS_TDATA_WIDTH  = 32;
-parameter C_S_W_AXIS_TDATA_WIDTH  = 32;
+parameter C_S_AXIS_TDATA_WIDTH    = 32;
 
 // CONV_ACC_v1_0 Inputs
 reg   conv_en                              = 0 ;
@@ -34,22 +32,14 @@ reg   s_axi_rready                         = 0 ;
 reg   m_t_axis_aclk                        = 0 ;
 reg   m_t_axis_aresetn                     = 0 ;
 reg   m_t_axis_tready                      = 0 ;
-reg   s_t_axis_aclk                        = 0 ;
-reg   s_t_axis_aresetn                     = 0 ;
-reg   [C_S_T_AXIS_TDATA_WIDTH-1 : 0]  s_t_axis_tdata = 0 ;
-reg   [(C_S_T_AXIS_TDATA_WIDTH/8)-1 : 0]  s_t_axis_tstrb = 4'b0001 ;
-reg   s_t_axis_tlast                       = 0 ;
-reg   s_t_axis_tvalid                      = 0 ;
-reg   s_w_axis_aclk                        = 0 ;
-reg   s_w_axis_aresetn                     = 0 ;
-reg   [C_S_W_AXIS_TDATA_WIDTH-1 : 0]  s_w_axis_tdata = 0 ;
-reg   [(C_S_W_AXIS_TDATA_WIDTH/8)-1 : 0]  s_w_axis_tstrb = 4'b0001 ;
-reg   s_w_axis_tlast                       = 0 ;
-reg   s_w_axis_tvalid                      = 0 ;
+reg   s_axis_aclk                          = 0 ;
+reg   s_axis_aresetn                       = 0 ;
+reg   [C_S_AXIS_TDATA_WIDTH-1 : 0]  s_axis_tdata = 0 ;
+reg   [(C_S_AXIS_TDATA_WIDTH/8)-1 : 0]  s_axis_tstrb = 4'b1111 ;
+reg   s_axis_tlast                         = 0 ;
+reg   s_axis_tvalid                        = 0 ;
 
 // CONV_ACC_v1_0 Outputs
-wire   w_done                              ;
-
 wire  s_axi_awready                        ;
 wire  s_axi_wready                         ;
 wire  [1 : 0]  s_axi_bresp                 ;
@@ -62,8 +52,7 @@ wire  m_t_axis_tvalid                      ;
 wire  [C_M_T_AXIS_TDATA_WIDTH-1 : 0]  m_t_axis_tdata ;
 wire  [(C_M_T_AXIS_TDATA_WIDTH/8)-1 : 0]  m_t_axis_tstrb ;
 wire  m_t_axis_tlast                       ;
-wire  s_t_axis_tready                      ;
-wire  s_w_axis_tready                      ;
+wire  s_axis_tready                        ;
 
 
 initial
@@ -88,12 +77,8 @@ CONV_ACC_v1_0 #(
     .C_S_AXI_DATA_WIDTH     ( C_S_AXI_DATA_WIDTH     ),
     .C_S_AXI_ADDR_WIDTH     ( C_S_AXI_ADDR_WIDTH     ),
     .C_M_T_AXIS_TDATA_WIDTH ( C_M_T_AXIS_TDATA_WIDTH ),
-    .C_M_T_AXIS_START_COUNT ( C_M_T_AXIS_START_COUNT ),
-    .C_S_T_AXIS_TDATA_WIDTH ( C_S_T_AXIS_TDATA_WIDTH ),
-    .C_S_W_AXIS_TDATA_WIDTH ( C_S_W_AXIS_TDATA_WIDTH ))
+    .C_S_AXIS_TDATA_WIDTH   ( C_S_AXIS_TDATA_WIDTH   ))
  u_CONV_ACC_v1_0 (
-    .conv_en                 ( conv_en                                              ),
-    .w_done                  ( w_done                                              ),
     .s_axi_aclk              ( s_axi_aclk                                           ),
     .s_axi_aresetn           ( s_axi_aresetn                                        ),
     .s_axi_awaddr            ( s_axi_awaddr      [C_S_AXI_ADDR_WIDTH-1 : 0]         ),
@@ -110,18 +95,12 @@ CONV_ACC_v1_0 #(
     .m_t_axis_aclk           ( m_t_axis_aclk                                        ),
     .m_t_axis_aresetn        ( m_t_axis_aresetn                                     ),
     .m_t_axis_tready         ( m_t_axis_tready                                      ),
-    .s_t_axis_aclk           ( s_t_axis_aclk                                        ),
-    .s_t_axis_aresetn        ( s_t_axis_aresetn                                     ),
-    .s_t_axis_tdata          ( s_t_axis_tdata    [C_S_T_AXIS_TDATA_WIDTH-1 : 0]     ),
-    .s_t_axis_tstrb          ( s_t_axis_tstrb    [(C_S_T_AXIS_TDATA_WIDTH/8)-1 : 0] ),
-    .s_t_axis_tlast          ( s_t_axis_tlast                                       ),
-    .s_t_axis_tvalid         ( s_t_axis_tvalid                                      ),
-    .s_w_axis_aclk           ( s_w_axis_aclk                                        ),
-    .s_w_axis_aresetn        ( s_w_axis_aresetn                                     ),
-    .s_w_axis_tdata          ( s_w_axis_tdata    [C_S_W_AXIS_TDATA_WIDTH-1 : 0]     ),
-    .s_w_axis_tstrb          ( s_w_axis_tstrb    [(C_S_W_AXIS_TDATA_WIDTH/8)-1 : 0] ),
-    .s_w_axis_tlast          ( s_w_axis_tlast                                       ),
-    .s_w_axis_tvalid         ( s_w_axis_tvalid                                      ),
+    .s_axis_aclk             ( s_axis_aclk                                          ),
+    .s_axis_aresetn          ( s_axis_aresetn                                       ),
+    .s_axis_tdata            ( s_axis_tdata      [C_S_AXIS_TDATA_WIDTH-1 : 0]       ),
+    .s_axis_tstrb            ( s_axis_tstrb      [(C_S_AXIS_TDATA_WIDTH/8)-1 : 0]   ),
+    .s_axis_tlast            ( s_axis_tlast                                         ),
+    .s_axis_tvalid           ( s_axis_tvalid                                        ),
 
     .s_axi_awready           ( s_axi_awready                                        ),
     .s_axi_wready            ( s_axi_wready                                         ),
@@ -135,8 +114,7 @@ CONV_ACC_v1_0 #(
     .m_t_axis_tdata          ( m_t_axis_tdata    [C_M_T_AXIS_TDATA_WIDTH-1 : 0]     ),
     .m_t_axis_tstrb          ( m_t_axis_tstrb    [(C_M_T_AXIS_TDATA_WIDTH/8)-1 : 0] ),
     .m_t_axis_tlast          ( m_t_axis_tlast                                       ),
-    .s_t_axis_tready         ( s_t_axis_tready                                      ),
-    .s_w_axis_tready         ( s_w_axis_tready                                      )
+    .s_axis_tready           ( s_axis_tready                                        )
 );
 
 
@@ -159,36 +137,39 @@ begin
     // fid_para=$fopen($sformatf({`DATA_PATH,"%0dpara.txt"},`DETAIL_NUM),"r");
     // $fscanf(fid_para,"%b",para);
     // $fclose(fid_para);
-    fork
-        send_ifmap(0);
-        send_weight(0);
-    join
+    // fork
+    //     send_ifmap(0);
+    //     send_weight(0);
+    // join
+    send_ifmap_weight(0);
 
     send_slv_reg(0); 
 
-    conv_en <= 1;
-    @(posedge s_axi_aclk);
-    conv_en <= 0 ;
+    // conv_en <= 1;
+    // @(posedge s_axi_aclk);
+    // conv_en <= 0 ;
 
 
 
-    wait(w_done);
+    wait(tb_CONV_ACC_v1_0.u_CONV_ACC_v1_0.u_CONV_ACC.w_done);
+    #(PERIOD * 10);
   //  fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
     send_weight(1);
     send_slv_reg(1);
-    conv_en <= 1;
-    @(posedge s_axi_aclk);
-    conv_en <= 0 ;
+    // conv_en <= 1;
+    // @(posedge s_axi_aclk);
+    // conv_en <= 0 ;
 
 
 
-    wait(w_done);
+    wait(tb_CONV_ACC_v1_0.u_CONV_ACC_v1_0.u_CONV_ACC.w_done);
+    #(PERIOD * 10);
  //   fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},`DETAIL_NUM),"r");
     send_weight(2);
     send_slv_reg(2);
-    conv_en <= 1;
-    @(posedge s_axi_aclk);
-    conv_en <= 0 ;
+    // conv_en <= 1;
+    // @(posedge s_axi_aclk);
+    // conv_en <= 0 ;
 
 
 //     wait(w_done);
@@ -287,7 +268,7 @@ task  s_wdata();
 
     //wait (s_axi_wready);
     @(negedge s_axi_wready);
-    s_axi_wdata  = { {2'b0,para[15:8]} ,{2'b0,para[23:16]}, 3'b000, 1'b1, 8'b00001000};     // user define//slv_reg1
+    s_axi_wdata  = { {2'b0,para[15:8]} ,{2'b0,para[23:16]}, 2'b00,1'b1, 1'b1, 8'b00001000};     // user define//slv_reg1
     $display("The kernel_nums is %0d",s_axi_wdata[21:12]);
     $display("The channels is %0d",s_axi_wdata[31:22]);
     $display("The shift is %0d",s_axi_wdata[7:0]);
@@ -320,31 +301,70 @@ task s_bresp();
 endtask : s_bresp
 
 
+// always @(*) begin
+    
+// end
 
-task send_ifmap;
-    input [31:0] tensor_num;
-    fid_tensor=$fopen($sformatf({`DATA_PATH,"%0dtensor_bin.txt"},tensor_num),"r");
-    $display("**************SEND IFMAP START*********************");
-    while (!$feof(fid_tensor)) begin
+// task send_ifmap;
+//     input [31:0] tensor_num;
+//     fid_tensor=$fopen($sformatf({`DATA_PATH,"%0dtensor_bin.txt"},tensor_num),"r");
+//     $display("**************SEND IFMAP START*********************");
+//     while (!$feof(fid_tensor)) begin
+//         @(posedge s_axi_aclk);
+//         $fscanf(fid_tensor, "%b", s_t_axis_tdata);
+//        // $display("The ifmap data is %0d",$signed(s_t_axis_tdata));
+//         if($feof(fid_tensor) != 0)begin
+//             s_t_axis_tlast <= 1;
+//         end
+//         else begin
+//             s_t_axis_tlast <= 0;
+//         end
+//         s_t_axis_tvalid <=  1;
+//     end
+//     $display("**************SEND IFMAP END*********************");
+//     @(posedge s_axi_aclk);
+//     $fclose(fid_tensor);
+//     s_t_axis_tdata <= 0;
+//     s_t_axis_tvalid <= 0;
+//     s_t_axis_tlast <= 0;
+// endtask
+
+
+reg [7:0] t_data = 0;
+reg [7:0] w_data =0;
+reg flag = 0;
+task send_ifmap_weight;
+    input [31:0] num;
+    fid_tensor=$fopen($sformatf({`DATA_PATH,"%0dtensor_bin.txt"},num),"r");
+    fid_weight=$fopen($sformatf({`DATA_PATH,"%0dweight_bin.txt"},num),"r");
+
+    $display("**************SEND IFMAP AND WEIGHT START*********************");
+
+    while (!$feof(fid_tensor) || !$feof(fid_weight) ) begin
         @(posedge s_axi_aclk);
-        $fscanf(fid_tensor, "%b", s_t_axis_tdata);
+        $fscanf(fid_tensor, "%b", t_data);
+        $fscanf(fid_weight, "%b", w_data);
+        if($feof(fid_weight) != 0)begin
+            flag <= 1;
+        end
+        s_axis_tdata = flag ? {14'b0,2'b10,t_data,w_data} : {14'b0,2'b11,t_data,w_data};
        // $display("The ifmap data is %0d",$signed(s_t_axis_tdata));
-        if($feof(fid_tensor) != 0)begin
-            s_t_axis_tlast <= 1;
+        if($feof(fid_tensor) != 0 && $feof(fid_weight) != 0)begin
+            s_axis_tlast <= 1;
         end
         else begin
-            s_t_axis_tlast <= 0;
+            s_axis_tlast <= 0;
         end
-        s_t_axis_tvalid <=  1;
+        s_axis_tvalid <=  1;
     end
     $display("**************SEND IFMAP END*********************");
     @(posedge s_axi_aclk);
     $fclose(fid_tensor);
-    s_t_axis_tdata <= 0;
-    s_t_axis_tvalid <= 0;
-    s_t_axis_tlast <= 0;
+    $fclose(fid_weight);
+    s_axis_tdata <= 0;
+    s_axis_tvalid <= 0;
+    s_axis_tlast <= 0;
 endtask
-
 
 
 task send_weight;
@@ -353,26 +373,27 @@ task send_weight;
     $display("**************SEND WEIGHT START*********************");
     while (!$feof(fid_weight)) begin
         @(posedge s_axi_aclk);
-        $fscanf(fid_weight, "%b", s_w_axis_tdata);
+        $fscanf(fid_weight, "%b", s_axis_tdata[7:0]);
+        s_axis_tdata[16] = 1;
         //$display("The weight data is %0d",$signed(s_w_axis_tdata));
         if($feof(fid_weight) != 0)begin
-            s_w_axis_tlast <= 1;
+            s_axis_tlast <= 1;
         end
         else begin
-            s_w_axis_tlast <= 0;
+            s_axis_tlast <= 0;
         end
-        s_w_axis_tvalid <= 1;
+        s_axis_tvalid <= 1;
     end
     $display("**************SEND WEIGHT END*********************");
     @(posedge s_axi_aclk);
     $fclose(fid_weight);
-    s_w_axis_tdata <= 0;
-    s_w_axis_tvalid <= 0;
-    s_w_axis_tlast <= 0;
+    s_axis_tdata <= 0;
+    s_axis_tvalid <= 0;
+    s_axis_tlast <= 0;
 endtask
 
 task receive_ifmap();
-    wait(w_done);
+    wait(tb_CONV_ACC_v1_0.u_CONV_ACC_v1_0.u_CONV_ACC.w_done);
     @(posedge s_axi_aclk);
     m_t_axis_tready <= 1 ;
     wait(m_t_axis_tlast);

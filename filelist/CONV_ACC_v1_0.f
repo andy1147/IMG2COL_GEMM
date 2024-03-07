@@ -14,6 +14,7 @@
 ../src/mul_add.v
 ../src/para_prepare.v
 ../src/result_save.v
+../src/s_axis_decoder.v
 ../src/tensor_addr.v
 ../src/weight_addr.v
 ../src/weight_buffer.v

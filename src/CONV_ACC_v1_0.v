@@ -16,18 +16,15 @@
 
 		// Parameters of Axi Master Bus Interface M_T_AXIS
 		parameter integer C_M_T_AXIS_TDATA_WIDTH	= 32,
-		parameter integer C_M_T_AXIS_START_COUNT	= 32,
 
 		// Parameters of Axi Slave Bus Interface S_T_AXIS
-		parameter integer C_S_T_AXIS_TDATA_WIDTH	= 32,
+		parameter integer C_S_AXIS_TDATA_WIDTH	= 32
 
-		// Parameters of Axi Slave Bus Interface S_W_AXIS
-		parameter integer C_S_W_AXIS_TDATA_WIDTH	= 32
 	)
 	(
 		// Users to add ports here
-		input conv_en,
-		output w_done,
+		// input conv_en,
+		// output w_done,
 		// User ports ends
 		// Do not modify the ports beyond this line
 
@@ -65,22 +62,14 @@
 		input wire  m_t_axis_tready,
 
 		// Ports of Axi Slave Bus Interface S_T_AXIS
-		input wire  s_t_axis_aclk,
-		input wire  s_t_axis_aresetn,
-		output wire  s_t_axis_tready,
-		input wire [C_S_T_AXIS_TDATA_WIDTH-1 : 0] s_t_axis_tdata,
-		input wire [(C_S_T_AXIS_TDATA_WIDTH/8)-1 : 0] s_t_axis_tstrb,
-		input wire  s_t_axis_tlast,
-		input wire  s_t_axis_tvalid,
+		input wire  s_axis_aclk,
+		input wire  s_axis_aresetn,
+		output wire  s_axis_tready,
+		input wire [C_S_AXIS_TDATA_WIDTH-1 : 0] s_axis_tdata,
+		input wire [(C_S_AXIS_TDATA_WIDTH/8)-1 : 0] s_axis_tstrb,
+		input wire  s_axis_tlast,
+		input wire  s_axis_tvalid
 
-		// Ports of Axi Slave Bus Interface S_W_AXIS
-		input wire  s_w_axis_aclk,
-		input wire  s_w_axis_aresetn,
-		output wire  s_w_axis_tready,
-		input wire [C_S_W_AXIS_TDATA_WIDTH-1 : 0] s_w_axis_tdata,
-		input wire [(C_S_W_AXIS_TDATA_WIDTH/8)-1 : 0] s_w_axis_tstrb,
-		input wire  s_w_axis_tlast,
-		input wire  s_w_axis_tvalid
 	);
 
 
@@ -88,6 +77,8 @@
 	wire [C_S_AXI_DATA_WIDTH-1:0]	slv_reg1;
 	wire [C_S_AXI_DATA_WIDTH-1:0]	slv_reg2;
 	wire [C_S_AXI_DATA_WIDTH-1:0]	slv_reg3;
+	wire conv_en;
+	wire w_done;
 
 
 // Instantiation of Axi Bus Interface S_AXI
@@ -101,6 +92,8 @@
 		.slv_reg1(slv_reg1),
 		.slv_reg2(slv_reg2),
 		.slv_reg3(slv_reg3),
+		.conv_en (conv_en),
+		.w_done  (w_done ),
 	//
 
 		.S_AXI_ACLK(s_axi_aclk),
@@ -135,13 +128,53 @@
 
 
 	// Add user logic here
+	wire ifmap_w_ready;
+	wire weight_w_ready;
+
+	wire [`DATA_WIDTH-1 :0] ifmap_w_data;
+	wire ifmap_w_valid;
+	wire ifmap_w_last;
+
+	wire [`DATA_WIDTH-1 :0] weight_w_data;
+	wire weight_w_valid;
+	wire weight_w_last;
+
+
+
+	s_axis_decoder #(
+		.C_S_AXIS_TDATA_WIDTH ( C_S_AXIS_TDATA_WIDTH )
+	)
+	u_s_axis_decoder (
+		.s_axis_aclk             ( s_axis_aclk                                      ),
+		.s_axis_aresetn          ( s_axis_aresetn                                   ),
+		.s_axis_tdata            ( s_axis_tdata    [C_S_AXIS_TDATA_WIDTH-1 : 0]     ),
+		.s_axis_tstrb            ( s_axis_tstrb    [(C_S_AXIS_TDATA_WIDTH/8)-1 : 0] ),
+		.s_axis_tlast            ( s_axis_tlast                                     ),
+		.s_axis_tvalid           ( s_axis_tvalid                                    ),
+
+		.ifmap_w_ready           ( ifmap_w_ready                                    ),
+		.weight_w_ready          ( weight_w_ready                                   ),
+
+		.s_axis_tready           ( s_axis_tready                                    ),
+		.ifmap_w_data            ( ifmap_w_data    [`DATA_WIDTH-1 :0]               ),
+		.ifmap_w_valid           ( ifmap_w_valid                                    ),
+		.ifmap_w_last            ( ifmap_w_last                                     ),
+		.weight_w_data           ( weight_w_data   [`DATA_WIDTH-1:0]                ),
+		.weight_w_valid          ( weight_w_valid                                   ),
+		.weight_w_last           ( weight_w_last                                    )
+	);
+
+
+
+
+
 	CONV_ACC  u_CONV_ACC (
 		.clk                     (   s_axi_aclk  ),
 		.rstn                    (   s_axi_aresetn   ),
 		.w_done                  (   w_done          ),
 	//AXI_LITE
 		.enable                  (   slv_reg1[8]      ),
-		.conv_en                 (   conv_en   ),
+		.conv_en                 (   conv_en     ),
 		.axi_tensor_size         (   slv_reg0[31:22]  ),
 		.axi_kernel_size         (   slv_reg0[15:8] ),
 		.axi_stride              (   slv_reg0[7:0]    ),
@@ -151,20 +184,20 @@
 		.shift                   (   slv_reg1[7:0]   ),
 
 	//AXI_STREAM_SLAVE
-		.ifmap_w_data            (  s_t_axis_tdata[`DATA_WIDTH-1 : 0] ),
-		.ifmap_w_valid           (  s_t_axis_tvalid  ),
-		.ifmap_w_last            (  s_t_axis_tlast ),
-		.ifmap_w_ready           (  s_t_axis_tready),
+		.ifmap_w_data            (  ifmap_w_data    [`DATA_WIDTH-1 :0] ),
+		.ifmap_w_valid           (  ifmap_w_valid  ),
+		.ifmap_w_last            (  ifmap_w_last ),
+		.ifmap_w_ready           (  ifmap_w_ready),
 
 		.r_ready                 (  m_t_axis_tready ),
 		.r_data                  (  m_t_axis_tdata[`DATA_WIDTH-1 : 0] ),
 		.r_valid                 (  m_t_axis_tvalid ),
 		.r_last                  (  m_t_axis_tlast  ),
 
-		.weight_w_ready          (  s_w_axis_tready  ),
-		.weight_w_data           (  s_w_axis_tdata[`DATA_WIDTH-1 : 0] ),
-		.weight_w_valid          (  s_w_axis_tvalid  ),
-		.weight_w_last           (  s_w_axis_tlast )
+		.weight_w_ready          (  weight_w_ready  ),
+		.weight_w_data           (  weight_w_data   [`DATA_WIDTH-1:0]  ),
+		.weight_w_valid          (  weight_w_valid  ),
+		.weight_w_last           (  weight_w_last )
 
 	);
 	// User logic ends

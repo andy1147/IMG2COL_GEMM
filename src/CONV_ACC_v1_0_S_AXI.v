@@ -19,6 +19,8 @@
 		output reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg1,
 		output reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg2,
 		output reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg3,
+		output conv_en,
+		input w_done,
 		// User ports ends
 		// Do not modify the ports beyond this line
 
@@ -83,7 +85,7 @@
     		// accept the read data and response information.
 		input wire  S_AXI_RREADY
 	);
-
+	reg flag;
 	// AXI4LITE signals
 	reg [C_S_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 	reg  	axi_awready;
@@ -222,8 +224,8 @@
 	    begin
 	      slv_reg0 <= 0;
 	      slv_reg1 <= 0;
-	      slv_reg2 <= 0;
-	      slv_reg3 <= 0;
+	    //   slv_reg2 <= 0;
+	    //   slv_reg3 <= 0;
 	    end 
 	  else begin
 	    if (slv_reg_wren)
@@ -243,28 +245,32 @@
 	                // Slave register 1
 	                slv_reg1[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	              end  
-	          2'h2:
-	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	                // Respective byte enables are asserted as per write strobes 
-	                // Slave register 2
-	                slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	              end  
-	          2'h3:
-	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	                // Respective byte enables are asserted as per write strobes 
-	                // Slave register 3
-	                slv_reg3[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	              end  
+	        //   2'h2:
+	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
+	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	        //         // Respective byte enables are asserted as per write strobes 
+	        //         // Slave register 2
+	        //         slv_reg2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	        //       end  
+	        //   2'h3:
+	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
+	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+	        //         // Respective byte enables are asserted as per write strobes 
+	        //         // Slave register 3
+	        //         slv_reg3[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	        //       end  
 	          default : begin
 	                      slv_reg0 <= slv_reg0;
 	                      slv_reg1 <= slv_reg1;
-	                      slv_reg2 <= slv_reg2;
-	                      slv_reg3 <= slv_reg3;
+	                    //   slv_reg2 <= slv_reg2;
+	                    //   slv_reg3 <= slv_reg3;
 	                    end
 	        endcase
 	      end
+		else begin
+		// when flag = 1(slv_reg1[9] has been read, need clear)
+			slv_reg1[9] <= (flag)? 0 : slv_reg1[9];
+		end
 	  end
 	end    
 
@@ -398,7 +404,28 @@
 	end    
 
 	// Add user logic here
+	always @(posedge S_AXI_ACLK) begin
+		if(slv_reg_wren)begin
+			slv_reg2 <= 0;
+		end
+		else if(w_done)begin
+			slv_reg2 <= {31'b0,1'b1};
+		end
+	end
 
+
+reg flag_d1;
+	always @(posedge S_AXI_ACLK) begin
+		if(S_AXI_ARESETN == 1'b0)begin
+			flag <= 0;
+			flag_d1 <= 0;
+		end
+		else begin
+			flag <= (slv_reg1[9])? 1 : 0;
+			flag_d1 <= flag;
+		end
+	end
+assign conv_en = flag && !flag_d1;
 	// User logic ends
 
 	endmodule

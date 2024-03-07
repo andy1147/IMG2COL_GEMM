@@ -75,7 +75,7 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         w_addr <= 0;
     end
-    else if(w_last)begin
+    else if(w_last || !w_valid)begin
         w_addr <= 0;
     end
     else if(w_valid && w_ready)begin
