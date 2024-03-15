@@ -112,7 +112,7 @@ wire w_addr_valid;
 
 wire result_w_ena;
 wire result_w_vld;
-
+(* keep_hierarchy="no" *)
 IMG2COL_GEMM  u_IMG2COL_GEMM (
     .clk                     ( clk                                      ),
     .rstn                    ( rstn                                     ),

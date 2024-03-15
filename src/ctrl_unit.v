@@ -25,7 +25,7 @@ module ctrl_unit (
 
 
         output reg [`TENSOR_SIZE-1:0] tensor_size, 
-        output reg [`KERNEL_SIZE-1:0] kernel_size, 
+        (* max_fanout = "20" *) output reg [`KERNEL_SIZE-1:0] kernel_size, 
         output reg [`CHANNELS_SIZE-1:0] channels, 
         output reg [`STRIDE_SIZE-1:0] stride, 
         output reg [`KERNEL_NUMS_SIZE-1 :0] kernel_nums,

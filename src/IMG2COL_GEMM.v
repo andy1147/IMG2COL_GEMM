@@ -10,7 +10,7 @@ module IMG2COL_GEMM (
         input [`SHIFT_WIDTH-1:0]   shift,
 
         input [`TENSOR_SIZE-1:0] tensor_size, 
-        input [`KERNEL_SIZE-1:0] kernel_size, 
+        (* max_fanout = "20" *)input [`KERNEL_SIZE-1:0] kernel_size, 
         input [`CHANNELS_SIZE-1:0] channels, 
         input [`STRIDE_SIZE-1:0] stride, 
         input [`KERNEL_NUMS_SIZE-1 :0] kernel_nums,
@@ -134,7 +134,7 @@ para_prepare  u_para_prepare (
 
 
 
-
+(* keep_hierarchy="no" *)
 img2col  u_img2col (
     //input
     .clk                     ( clk                                                ),

@@ -223,7 +223,8 @@ always @(*) begin
 
     else if(r_vld)begin
         if(current_state == STATE2)begin
-            ena1= 1'b1;
+           // ena1= 1'b1;  r_vld && r_ready
+            ena1= r_vld && r_ready;
             wea1 =1'b0;
             addr1 = r_addr;
             din1 = `DATA_WIDTH'b0;
@@ -238,7 +239,8 @@ always @(*) begin
 
         end
         else begin
-            ena2= 1'b1;
+    //        ena2= 1'b1;
+            ena2= r_vld && r_ready;
             wea2 =1'b0;
             addr2 = r_addr;
             din2 = `DATA_WIDTH'b0;

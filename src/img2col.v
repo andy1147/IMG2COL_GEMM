@@ -16,7 +16,7 @@ module img2col (
         // input [`KERNEL_NUMS_SIZE-1 :0] kernel_nums,
 
         // TO tensor_addr
-        input [`KERNEL_SIZE-1:0] kernel_size,
+        (* max_fanout = "20" *) input [`KERNEL_SIZE-1:0] kernel_size,
         input [`STRIDE_SIZE-1:0] stride,
         input [`S2P_SIZE-1 : 0] img2col_t_length_rem,
         input [`TENSOR_SIZE + `STRIDE_SIZE -1 :0] t_mul_s,
@@ -69,6 +69,7 @@ assign o_tensor_done = tensor_done;
 assign o_w_addr_valid = w_addr_valid;
 assign o_t_addr_valid = t_addr_valid;
 
+(* keep_hierarchy="no" *)
 tensor_addr  u_tensor_addr (
     .clk                     ( clk                                 ),
     .rstn                    ( rstn                                ),

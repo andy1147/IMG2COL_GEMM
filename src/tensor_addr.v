@@ -39,7 +39,7 @@ module tensor_addr
 //   input [`STRIDE_SIZE-1:0] stride, 
 
 
-  input [`KERNEL_SIZE-1:0] kernel_size,
+  (* max_fanout = "20" *) input [`KERNEL_SIZE-1:0] kernel_size,
   input [`STRIDE_SIZE-1:0] stride, 
   input [`S2P_SIZE-1 : 0] img2col_t_length_rem,
   input [`TENSOR_SIZE + `STRIDE_SIZE -1 :0] t_mul_s,
