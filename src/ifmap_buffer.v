@@ -88,7 +88,7 @@ always @(posedge clk or negedge rstn) begin
     if(!rstn)begin
         r_addr <= 0;
     end
-    else if(r_last)begin
+    else if(r_last || conv_en)begin
         r_addr <= 0;
     end
     else if(r_vld && r_ready)begin
