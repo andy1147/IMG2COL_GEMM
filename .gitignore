@@ -4,3 +4,4 @@ projects/
 rtl/define.v
 src/local_define.v
 doc/
+python/
